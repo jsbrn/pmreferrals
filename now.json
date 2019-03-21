@@ -1,4 +1,10 @@
 {
     "version": 2,
-    "builds": [{ "src": "api/hello/index.js", "use": "@now/node" }]
+    "builds": [
+        { "src": "api/hello/index.js", "use": "@now/node" },
+        {"src": "./", "use": "@now/static"}
+    ],
+    "routes": [
+        {"src": "/test", "dest": "https://google.ca", "status": 200}
+    ]
 }
