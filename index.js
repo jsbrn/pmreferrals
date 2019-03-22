@@ -74,6 +74,12 @@ app.get('/referral', (request, response) => {
     });
 });
 
+app.get('/faq', (request, response) => {
+    response.render("faq", {
+        layout: "main.hbs"
+    });
+});
+
 //POST Parameter api for Spigot to connect to
 
 app.use(express.json());
