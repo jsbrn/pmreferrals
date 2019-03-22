@@ -6,7 +6,7 @@
     <p>You will be reminded every month to confirm that you are still a Public Mobile customer. 
         Your email is required for this. We will not send anything beyond reminders and account notifications.
     </p>
-    <p>If you'd like, you can <a target = "_blank" href = "/faq">read more about how your number is used</a>. <i>You can remove your number from the list at any time.</i></p>
+    <p>If you'd like, you can <a target = "_blank" href = "/faq">read more about how your number is used</a>. <i>You can remove it from the list at any time.</i></p>
     <p><b>Don't add your phone number if you are not comfortable with strangers seeing it!</b></p>
     <div class = "row">
         <form id = "join_form">
@@ -17,7 +17,7 @@
             <input id = "email" type = "text" placeholder = "Your email"></input>
         </form>
         <div id = "error" class = "failure-panel bottom-space"></div>
-        <button onclick = "validate()" class = "confirm">Submit your number</button>
+        <button id = "submit" onclick = "post()" class = "confirm">Submit your number</button>
         <a href = "/" class = "button">Go back</a>
     </div>
 </div>
@@ -25,16 +25,6 @@
 <script>
 
     $("#error").hide();
-
-    function validate() {
-        var n_patt = /\d\d\d\d\d\d\d\d\d\d/g, e_patt = /(.+)@(.+){2,}\.(.+){2,}/;
-        var number = $("#area")[0].value + $("#prefix")[0].value + $("#line")[0].value;
-        var email = $("#email")[0].value;
-
-        var validNumber = n_patt.test(number);
-        var validEmail = e_patt.test(email);
-        post();
-    }
 
     function post() {
         $.ajax({
