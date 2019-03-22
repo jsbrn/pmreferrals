@@ -1,0 +1,104 @@
+
+.bg-img {
+	background: url("../images/bg.png") no-repeat center center fixed; 
+	-webkit-background-size: cover;
+	-moz-background-size: cover;
+	-o-background-size: cover;
+	background-size: cover;
+}
+
+.bg-color {
+	background: white;
+}
+
+.top-space {
+	margin-top: 15px;
+}
+
+.bottom-space {
+	margin-bottom: 15px;
+}
+
+.shadow {
+	-webkit-box-shadow: 3px 3px 8px 1px rgba(0,0,0,0.75);
+	-moz-box-shadow: 3px 3px 8px 1px rgba(0,0,0,0.75);
+	box-shadow: 3px 3px 8px 1px rgba(0,0,0,0.75);
+}
+
+.panel, .info-panel, .success-panel, .failure-panel {
+	background: #fff;
+	padding: 10px;
+	-webkit-box-shadow: 0px 0px 2px 1px rgba(0,0,0,0.25);
+	-moz-box-shadow: 0px 0px 2px 1px rgba(0,0,0,0.25);
+	box-shadow: 0px 0px 2px 1px rgba(0,0,0,0.25);
+	border-radius: 7px;
+}
+
+.info-panel {
+	background: #efe7a7;
+	color: black;
+}
+
+.success-panel {
+	background: #82db86;
+	color: #163816;
+}
+
+.failure-panel {
+	background: #d14545;
+	color: white;
+}
+
+.navlink {
+	color: yellow;
+	font-style: capitalize;
+	font-weight: bold;
+	text-decoration: none;
+	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+	margin-right: 10px;
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+.navlink:hover {
+	color: white;
+}
+
+button, .button {
+	color: black;
+	border: 1px solid black;
+}
+
+button:hover, .button:hover {
+	border: 1px solid black;
+}
+
+.confirm {
+	color: white;
+	background: green;
+}
+
+.confirm:hover {
+	background: rgb(15, 182, 15);
+}
+
+.cancel {
+	color: white;
+	background: rgb(161, 57, 57);
+}
+
+.cancel:hover {
+	background:red;
+}
+
+.white {
+	color: white;
+	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
+}
+
+a {
+	color: orange;
+}
+
+table {
+	font-family: Arial, Helvetica, sans-serif;
+}

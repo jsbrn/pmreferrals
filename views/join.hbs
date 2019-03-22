@@ -1,0 +1,67 @@
+<div class = "container" style = "margin-top: 5%">
+    <h4>Add your Public Mobile number as a referral</h4>
+    <p>Your number will have a chance to be used by people signing up for Public Mobile. 
+        You will recieve $1 in monthly credits for each new referral from your number.
+        Go <a target = "_blank" href = "https://www.publicmobile.ca/en/on/get-help/articles/the-refer-a-friend-reward">here</a> to learn more.</p>
+    <p>You will need to confirm that your number is still an active Public Mobile number, or it will be removed from the database.
+        Your email is required for this. We will not send anything beyond reminders and notifications.
+    </p>
+    <div class = "row">
+        <form id = "join_form">
+            <input id = "area" maxlength = "3" size = "3" type = "text" placeholder = "555"></input>
+            <input id = "prefix" maxlength = "3" size = "3" type = "text" placeholder = "555"></input>
+            <input id = "line" maxlength = "4" size = "4" type = "text" placeholder = "5555"></input>
+            <br>
+            <input id = "email" type = "text" placeholder = "Your email (required)"></input>
+        </form>
+        <div id = "error" class = "failure-panel bottom-space"></div>
+        <button onclick = "validate()" class = "confirm">Submit your number</button>
+        <a href = "/" class = "button">Go back</a>
+    </div>
+</div>
+
+<script>
+
+    $("#error").hide();
+
+    function validate() {
+        var n_patt = /\d\d\d\d\d\d\d\d\d\d/g, e_patt = /(.+)@(.+){2,}\.(.+){2,}/;
+        var number = $("#area")[0].value + $("#prefix")[0].value + $("#line")[0].value;
+        var email = $("#email")[0].value;
+
+        var validNumber = n_patt.test(number);
+        var validEmail = e_patt.test(email);
+        post();
+    }
+
+    function post() {
+        $.ajax({
+            url: '/api/submit_join',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                area: $("#area")[0].value,
+                prefix: $("#prefix")[0].value,
+                line: $("#line")[0].value,
+                email: $("#email")[0].value
+            }),
+            success: function(data, status) {
+                if (data != "OK") {
+                    error(data);
+                } else { 
+                    window.location.href = "/";
+                }
+            }
+        });
+    }
+
+    function error(message) {
+        if (message == undefined || message.length <= 0) { 
+            $("#error").fadeOut(50); 
+        } else {
+            $("#error").fadeOut(50).fadeIn(100);
+            $("#error").text(message);
+        }
+    }
+
+</script>
