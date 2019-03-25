@@ -82,6 +82,12 @@ app.get('/faq', (request, response) => {
     });
 });
 
+app.get('/success', (request, response) => {
+    response.render("success", {
+        layout: "main.hbs"
+    });
+});
+
 app.get('/user/:accountID', (request, response, next) => {
     database.get("accounts", {url: request.params.accountID}, {}, 1, function(results) {
         if (results.length > 0) {
@@ -99,7 +105,7 @@ app.use(express.json());
 
 app.get("/api/email_test", (request, response) => {
     var date = new Date().toISOString();
-    mailer.send(process.env.TEST_RECIPIENT, "This is a test!", "Generated on "+date, function(error, info) {
+    mailer.sendTemplate(process.env.ADMIN_EMAIL, "Test Referral", "referral", {area: 555, prefix: 555, line: 5555}, function(error, info) {
         console.log(date, error, info);
         response.send(info);
     });
@@ -121,30 +127,81 @@ app.post("/api/submit_join", (request, response) => {
         response.send({message: "You have entered an invalid email address.", redirect: false});
     } else {
         var randomID = Math.random().toString(36).slice(2);
-        database.get("accounts", {email: email}, {}, -1, (results) => {
+        database.get("accounts", {$or: [{email: email}, {full_number: number}]}, {}, -1, (results) => {
             if (results.length == 0) {
-                database.get("accounts", {full_number: number}, {}, -1, (results) => {
-                    if (results.length == 0) {
-                        database.insert("accounts", [{
-                            url: randomID,
-                            email: email,
-                            area: request.body.area,
-                            prefix: request.body.prefix,
-                            line: request.body.line,
-                            full_number: number
-                        }], () => { 
-                            response.send({message: randomID, redirect: true}); 
-                        }, () => { 
-                            response.send({message: "An error has occurred, please try again later.", redirect: false});
-                        });
-                    } else {    
-                        response.send({message: "The number you entered is already registered!", redirect: false});
-                    }
+                database.insert("accounts", [{
+                    url: randomID,
+                    email: email,
+                    area: request.body.area,
+                    prefix: request.body.prefix,
+                    line: request.body.line,
+                    full_number: number,
+                    verified: false
+                }], () => { 
+                    response.send({message: randomID, redirect: true}); 
+                }, (error) => { 
+                    response.send({message: error.message, redirect: false});
                 });
             } else {
-                response.send({message: "An account by that email already exists!", redirect: false});
+                response.send({message: "This email or phone number has already been registered.", redirect: false});
             }
-        }, (error) => { response.send({message: "An error has occurred, please try again later.", redirect: false}); });
+        }, (error) => { response.send({message: error.message, redirect: false}); });
+    }
+
+});
+
+app.post("/api/request_referral", (request, response) => {
+    console.log(request.body);
+
+    var n_patt = e_patt = /(.+)@(.+){2,}\.(.+){2,}/;
+    var email = request.body.email;
+    var validEmail = e_patt.test(email);
+
+    if (!validEmail) {
+        response.send({message: "You have entered an invalid email address.", redirect: false});
+    } else {
+        database.get("requests", {email: email}, {}, -1, (results) => {
+            if (results.length == 0) { //if there is no request previously made by the email address
+                console.log(email+" is making a new request!");
+                //pick a random account (not the account of the email address given) to send
+                database.get("accounts", {/*verified: true, */email: {$ne: email}}, {}, -1, (results) => {
+                    if (results.length == 0) { //if no accounts, tell the user
+                        response.send({message: "There are no referral numbers available! Please try again later.", redirect: false});
+                    } else { //otherwise pick a random one
+                        var random = results[Math.floor(Math.random()*results.length)];
+                        //send the email, if successful then add request to database and send redirect signal
+                        mailer.sendTemplate(email, "Your Public Mobile referral", "referral", {area: random.area, prefix: random.prefix, line: random.line}, (error, info) => {
+                            if (error) {
+                                console.log(error.message);
+                                response.send({message: "There was an error sending the email. This happens sometimes. Please try again.", redirect: false});
+                            } else {
+                                database.insert("requests", [{email: email, response: random.url}], () => {
+                                    response.send({redirect: true});
+                                }, (error) => {
+                                    response.send({message: error.message, redirect: false});
+                                });
+                            }
+                        });
+                    }
+                }, (error) => { response.send({message: error.message, redirect: false})});
+            } else { //if email has already requested a referral, send them the one they got last time
+                console.log(email+" is requesting a referral again!");
+                var pastRequest = results[0];
+                console.log(JSON.stringify(pastRequest));
+                //get the associated account and send the phone number
+                database.get("accounts", {url: pastRequest.response}, {}, 1, (results) => {
+                    var acct = results[0];
+                    mailer.sendTemplate(email, "Your Public Mobile referral", "referral", {area: acct.area, prefix: acct.prefix, line: acct.line}, (error, info) => {
+                        if (error) {
+                            console.log(error.message);
+                            response.send({message: "There was an error sending the email. This happens sometimes. Please try again.", redirect: false});
+                        } else {
+                            response.send({redirect: true});
+                        }
+                    });
+                }, (error) => { response.send({message: error.message, redirect: false})});
+            }
+        }, (error) => { response.send({message: error.message, redirect: false}); });
     }
 
 });
@@ -161,6 +218,5 @@ const port = 80;
 app.listen(port, function(err) {
     if (err) console.log("An error occurred.");
     console.log("Server started on port "+port);
-    //console.log(JSON.stringify(process.env));
     database.connect();
 });

@@ -1,6 +1,14 @@
 const nodemailer = require('nodemailer');
 
-console.log(process.env.EMAIL_ADDRESS+" email");
+var hbs = require('nodemailer-express-handlebars');
+var options = {
+    viewEngine: {
+        extname: '.hbs',
+        layoutsDir: 'views/email'
+    },
+    viewPath: 'views/email',
+    extName: '.hbs'
+};
 
 // create reusable transporter object using the default SMTP transport
 const transporter = nodemailer.createTransport({
@@ -12,9 +20,21 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASSWORD
     }
 });
+transporter.use('compile', hbs(options));
 
-function send(to, subject, html, callback) {
-    sendMail({
+function sendTemplate(to, subject, template, context, callback) {
+    context.root = process.env.ROOT_DIRECTORY; //assign a root URL so that external resources can be loaded in the email
+    transporter.sendMail({
+        from: "PMReferrals.ca <noreply@pmreferrals.ca>",
+        to: to,
+        subject: subject,
+        template: template,
+        context: context
+    }, callback);
+}
+
+function sendHTML(to, subject, html, callback) {
+    transporter.sendMail({
         from: 'PMReferrals.ca <noreply@pmreferrals.ca>', // sender address
         to: to, // list of receivers
         subject: subject, // Subject line
@@ -22,8 +42,15 @@ function send(to, subject, html, callback) {
     }, callback);
 }
 
-function sendMail(mail, callback) {
-    transporter.sendMail(mail, callback);
+function sendRaw(to, subject, text, callback) {
+    transporter.sendMail({
+        from: 'PMReferrals.ca <noreply@pmreferrals.ca>', // sender address
+        to: to, // list of receivers
+        subject: subject, // Subject line
+        text: text // html body
+    }, callback);
 }
 
-module.exports.send = send;
+module.exports.sendTemplate = sendTemplate;
+module.exports.sendHTML = sendHTML;
+module.exports.sendRaw = sendRaw;

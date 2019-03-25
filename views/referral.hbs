@@ -3,10 +3,10 @@
     <p>Your referral number will be sent to this address.</p>
     <div class = "row">
         <form id = "referral_form">
-            <input size = "28" type = "text" placeholder = "example@example.com"></input>
+            <input id = "email" size = "28" type = "text" placeholder = "example@example.com"></input>
         </form>
         <div id = "error" class = "failure-panel bottom-space">Test</div>
-        <button class = "confirm" type="submit" form="form1" value="submit">Get referral</button>
+        <button id = "submit" onclick = "post()" class = "confirm" type="submit" form="form1" value="submit">Get referral</button>
         <a href = "/" class = "button">Go back</a>
     </div>
 </div>
@@ -16,21 +16,17 @@
     $("#error").hide();
 
     function post() {
+        $("#submit")[0].value = "help me" ;//("value", "Help me");
         $.ajax({
-            url: '/api/submit_join',
+            url: '/api/request_referral',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
-                area: $("#area")[0].value,
-                prefix: $("#prefix")[0].value,
-                line: $("#line")[0].value,
                 email: $("#email")[0].value
             }),
             success: function(data, status) {
                 console.log(data, status);
-                if (data.redirect)
-                    window.location.href = "/user/"+data.message;
-                else error(data.message);
+                if (data.redirect) window.location.href = "/success"; else error(data.message);
             }
         });
     }
