@@ -1,0 +1,30 @@
+<div class = "container" style = "margin-top: 5%">
+    <div class = "row">
+        <div class = "one-half column">
+            <h3>Your referral account</h3>
+            <h4>{{user.area}} {{user.prefix}} {{user.line}}</h4>
+            <h5>{{user.email}}</h5>
+        </div>
+        <div class = "one-half column info-panel">
+            <b>Bookmark this page so you can find it later!</b><br>
+            <text>Your number has been selected <b>[uses]</b> times.</text><br>
+            <text>There are <b>[number_count]</b> other referrals in the list.</text><br>
+            <text>There is a <b>[100/number_count]%</b> chance of your number being selected.</text>
+        </div>
+    </div>
+    <hr>
+    <div class = "row">
+        <h4>Update your information</h4>
+        <input id = "email" type = "text" placeholder = "New email"></input>
+        <button>Change email address</button>
+        <br>
+        <input id = "email" size = "3" maxlength = "3" type = "text" placeholder = "555"></input>
+        <input id = "email" size = "3" maxlength = "3" type = "text" placeholder = "555"></input>
+        <input id = "email" size = "4" maxlength = "4" type = "text" placeholder = "5555"></input>
+        <button>Change referral number</button>
+        <hr>
+        <h4>Delete your account</h4>
+        <b>This will remove your number and email address from the database. You will no longer be selected for referrals.</b><br><br>
+        <button class = "cancel">Delete my account</button>
+    </div>
+</div>

@@ -1,13 +1,47 @@
 <div class = "container" style = "margin-top: 5%">
     <h4>What's your email?</h4>
-    <p>Your referral number will be sent to this address.
-        Your email will not be stored in our database, but the owner of the number will see it.
-    </p>
+    <p>Your referral number will be sent to this address.</p>
     <div class = "row">
         <form id = "referral_form">
-            <input size = "32" type = "text" placeholder = "example@example.com"></input>
+            <input size = "28" type = "text" placeholder = "example@example.com"></input>
         </form>
+        <div id = "error" class = "failure-panel bottom-space">Test</div>
         <button class = "confirm" type="submit" form="form1" value="submit">Get referral</button>
         <a href = "/" class = "button">Go back</a>
     </div>
 </div>
+
+<script>
+
+    $("#error").hide();
+
+    function post() {
+        $.ajax({
+            url: '/api/submit_join',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                area: $("#area")[0].value,
+                prefix: $("#prefix")[0].value,
+                line: $("#line")[0].value,
+                email: $("#email")[0].value
+            }),
+            success: function(data, status) {
+                console.log(data, status);
+                if (data.redirect)
+                    window.location.href = "/user/"+data.message;
+                else error(data.message);
+            }
+        });
+    }
+
+    function error(message) {
+        if (message == undefined || message.length <= 0) { 
+            $("#error").fadeOut(50); 
+        } else {
+            $("#error").fadeOut(50).fadeIn(100);
+            $("#error").text(message);
+        }
+    }
+
+</script>

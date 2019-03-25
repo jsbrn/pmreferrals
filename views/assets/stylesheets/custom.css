@@ -15,9 +15,18 @@
 	margin-top: 15px;
 }
 
+.left-space {
+	margin-left: 15px;
+}
+
 .bottom-space {
 	margin-bottom: 15px;
 }
+
+.right-space {
+	margin-right: 15px;
+}
+
 
 .shadow {
 	-webkit-box-shadow: 3px 3px 8px 1px rgba(0,0,0,0.75);
@@ -93,6 +102,15 @@ button:hover, .button:hover {
 .white {
 	color: white;
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
+}
+
+.green {
+	color: green;
+	text-shadow: 1px 1px 1px rgba(13, 48, 21, 0.8);
+}
+
+.large {
+	font-size: 48px;
 }
 
 a {

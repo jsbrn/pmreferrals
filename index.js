@@ -1,3 +1,5 @@
+require('dotenv').config() //load the environment variables
+
 const path = require('path');
 //load express
 const express = require('express')
@@ -9,7 +11,7 @@ const session = require('express-session');
 const mailer = require('./app/mailer.js');
 //if not running on Now instance, require dotenv
 //(reads environment variables from a .env file on the local repo)
-if (process.env.NOW == undefined) require('dotenv').config()
+
 
 /*Set the Handlebars options, including the Helpers*/
 app.engine('.hbs', exphbs({
@@ -80,9 +82,28 @@ app.get('/faq', (request, response) => {
     });
 });
 
+app.get('/user/:accountID', (request, response, next) => {
+    database.get("accounts", {url: request.params.accountID}, {}, 1, function(results) {
+        if (results.length > 0) {
+            response.render("account", {
+                layout: "main.hbs",
+                user: results[0]
+            });
+        } else { next(); }
+    }, () => { response.sendStatus(500) ;});
+});
+
 //POST Parameter api for Spigot to connect to
 
 app.use(express.json());
+
+app.get("/api/email_test", (request, response) => {
+    var date = new Date().toISOString();
+    mailer.send(process.env.TEST_RECIPIENT, "This is a test!", "Generated on "+date, function(error, info) {
+        console.log(date, error, info);
+        response.send(info);
+    });
+});
 
 app.post("/api/submit_join", (request, response) => {
     console.log(request.body);
@@ -95,12 +116,37 @@ app.post("/api/submit_join", (request, response) => {
     var validEmail = e_patt.test(email);
 
     if (!validNumber) {
-        response.send("You have entered an invalid phone number!");
+        response.send({message: "You have entered an invalid phone number.", redirect: false});
     } else if (!validEmail) {
-        response.send("You have entered an invalid email address!");
+        response.send({message: "You have entered an invalid email address.", redirect: false});
     } else {
-        response.send(200);
+        var randomID = Math.random().toString(36).slice(2);
+        database.get("accounts", {email: email}, {}, -1, (results) => {
+            if (results.length == 0) {
+                database.get("accounts", {full_number: number}, {}, -1, (results) => {
+                    if (results.length == 0) {
+                        database.insert("accounts", [{
+                            url: randomID,
+                            email: email,
+                            area: request.body.area,
+                            prefix: request.body.prefix,
+                            line: request.body.line,
+                            full_number: number
+                        }], () => { 
+                            response.send({message: randomID, redirect: true}); 
+                        }, () => { 
+                            response.send({message: "An error has occurred, please try again later.", redirect: false});
+                        });
+                    } else {    
+                        response.send({message: "The number you entered is already registered!", redirect: false});
+                    }
+                });
+            } else {
+                response.send({message: "An account by that email already exists!", redirect: false});
+            }
+        }, (error) => { response.send({message: "An error has occurred, please try again later.", redirect: false}); });
     }
+
 });
 
 //catchall and 404

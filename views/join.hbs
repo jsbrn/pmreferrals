@@ -9,7 +9,7 @@
     <p>If you'd like, you can <a target = "_blank" href = "/faq">read more about how your number is used</a>. <i>You can remove it from the list at any time.</i></p>
     <p><b>Don't add your phone number if you are not comfortable with strangers seeing it!</b></p>
     <div class = "row">
-        <form id = "join_form">
+        <form id = "join_form" action = "/api/submit_join">
             <input id = "area" maxlength = "3" size = "3" type = "text" placeholder = "555"></input>
             <input id = "prefix" maxlength = "3" size = "3" type = "text" placeholder = "555"></input>
             <input id = "line" maxlength = "4" size = "4" type = "text" placeholder = "5555"></input>
@@ -38,11 +38,10 @@
                 email: $("#email")[0].value
             }),
             success: function(data, status) {
-                if (data != "OK") {
-                    error(data);
-                } else { 
-                    window.location.href = "/";
-                }
+                console.log(data, status);
+                if (data.redirect)
+                    window.location.href = "/user/"+data.message;
+                else error(data.message);
             }
         });
     }
