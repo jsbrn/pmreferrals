@@ -101,11 +101,24 @@ app.get('/user/:id', (request, response, next) => {
     database.get("accounts", {id: request.params.id}, {}, 1, function(results) {
         if (results.length > 0) {
             response.render("account", {
-                layout: "main.hbs",
-                user: results[0]
+                layout: "main",
+                user: results[0],
+                verified: results[0].email_verified,// && results[0].phone_verified,
+                email_verify: !results[0].email_verified,
+                phone_verify: false//!results[0].phone_verified
             });
         } else { next(); }
-    }, () => { response.sendStatus(500) ;});
+    }, () => { response.sendStatus(500); });
+});
+
+app.get("/verify/:id", (request, response, next) => {
+    database.get("accounts", {id: request.params.id, verification_code: parseInt(request.query.code)}, {}, -1, (results) => {
+        if (results.length > 0) {
+            database.update("accounts", {id: request.params.id}, {email_verified: true}, () => {
+                response.redirect("/user/"+request.params.id);
+            }, (error) => { console.log(error.message); next(); })
+        } else { console.log("No user found with id", request.params.id, "and code", request.query.code); next(); }
+    }, (error) => { console.log(error.message); next(); });
 });
 
 //POST Parameter api for Spigot to connect to
@@ -140,7 +153,8 @@ app.post("/api/submit_join", (request, response) => {
                     line: request.body.line,
                     full_number: number,
                     email_verified: false,
-                    phone_verified: false
+                    phone_verified: false,
+                    verification_code: Math.floor((Math.random() * 8999 + 1000)) //random 4 digit number
                 }], () => {
                     response.send({message: randomID, redirect: true}); 
                 }, (error) => { 
@@ -162,7 +176,7 @@ app.post("/api/request_referral", (request, response) => {
             if (results.length == 0) { //if there is no request previously made by the email address
                 console.log(request.body.email+" is making a new request!");
                 //pick a random account (not the account of the email address given) to send
-                database.get("accounts", {/*verified: true, */email: {$ne: request.body.email}}, {}, -1, (results) => {
+                database.get("accounts", {email_verified: true, /*phone_verified: true,*/ email: {$ne: request.body.email}}, {}, -1, (results) => {
                     if (results.length == 0) { //if no accounts, tell the user
                         response.send({message: "There are no referral numbers available! Please try again later.", redirect: false});
                     } else { //otherwise pick a random one
@@ -171,7 +185,7 @@ app.post("/api/request_referral", (request, response) => {
                         mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", {area: random.area, prefix: random.prefix, line: random.line}, (error, info) => {
                             if (error) {
                                 console.log(error.message);
-                                response.send({message: "There was an error sending the email. This happens sometimes. Please try again.", redirect: false});
+                                response.send({message: "There was an problem sending the email. This happens sometimes. Please try again.", redirect: false});
                             } else {
                                 database.insert("requests", [{email: request.body.email, response: random.id}], () => {
                                     response.send({redirect: true});
@@ -188,24 +202,43 @@ app.post("/api/request_referral", (request, response) => {
                 console.log(JSON.stringify(pastRequest));
                 //get the associated account and send the phone number
                 database.get("accounts", {id: pastRequest.response}, {}, 1, (results) => {
-                    var acct = results[0];
-                    mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", {area: acct.area, prefix: acct.prefix, line: acct.line}, (error, info) => {
-                        if (error) {
-                            console.log(error.message);
-                            response.send({message: "There was an error sending the email. This happens sometimes. Please try again.", redirect: false});
-                        } else {
-                            response.send({redirect: true});
-                        }
-                    });
+                    if (results.length > 0) {
+                        var acct = results[0];
+                        mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", {area: acct.area, prefix: acct.prefix, line: acct.line}, (error, info) => {
+                            if (error) {
+                                console.log(error.message);
+                                response.send({message: "There was an problem sending the email. This happens sometimes. Please try again.", redirect: false});
+                            } else {
+                                response.send({redirect: true});
+                            }
+                        });
+                    } else {
+                        //if the old reference points to a deleted account, forget the request, say there was an error and prompt the user to retry
+                        database.remove("requests", {email: request.body.email}, () => {
+                            response.send({message: "The server encountered an error. Please refresh the page and try again.", redirect: false});
+                        }, (error) => { response.send({message: "The server encountered an unexplainable error. Please try again."})});
+                    }
                 }, (error) => { response.send({message: error.message, redirect: false})});
             }
         }, (error) => { response.send({message: error.message, redirect: false}); });
     }
 });
 
+app.post("/api/request_login", (request, response) => {
+    database.get("accounts", {email: request.body.email}, {}, -1, (results) => {
+        if (results.length > 0) {
+            mailer.sendTemplate(request.body.email, "Your referral account", "account", {id: results[0].id}, (error, info) => {
+                if (error) response.send("Sending failed, try again"); else response.send("Link sent");
+            });
+        } else {
+            response.send("No account by that address");
+        }
+    }, (error) => { response.send("Sending failed, try again"); });
+});
+
 app.post("/api/update_email", (request, response) => {
     if (validator.isValidEmail(request.body.email)) {
-        database.update("accounts", {id: request.body.id}, {email: request.body.email}, () => {
+        database.update("accounts", {id: request.body.id}, {email: request.body.email, email_verified: false}, () => {
             response.send({reload: true});
         }, (error) => { response.send({message: error.message, reload: false})});
     } else {
@@ -219,13 +252,27 @@ app.post("/api/update_phone", (request, response) => {
             {area: request.body.area, 
             prefix: request.body.prefix, 
             line: request.body.line, 
-            full_number: request.body.area + request.body.prefix + request.body.line}, 
-            () => {
-                response.send({reload: true});
+            full_number: request.body.area + request.body.prefix + request.body.line,
+            phone_verified: false}, 
+        () => {
+            response.send({reload: true});
         }, (error) => { response.send({message: error.message, reload: false})});
     } else {
         response.send({message: "You have entered an invalid phone number!", reload: false});
     }
+});
+
+app.post("/api/verify_email", (request, response) => {
+    database.get("accounts", {id: request.body.id}, {}, 1, (results) => {
+        if (results.length > 0) {
+            var acct = results[0];
+            mailer.sendTemplate(acct.email, "Verify your email", "verify", {id: acct.id, code: acct.verification_code}, (error, info) => {
+                if (error) response.send("Send failed, try again"); else response.send("Email sent");
+            });
+        } else {
+            response.send("Send failed, try again");
+        }
+    }, (error) => { response.send("Send failed, try again"); });
 });
 
 app.post("/api/delete_account", (request, response) => {
