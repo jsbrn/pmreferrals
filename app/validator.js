@@ -1,8 +1,15 @@
 const jq = require('jquery');
+const request = require('request');
 
-function isValidEmail(email) {
-    var n_patt = e_patt = /(.+)@(.+){2,}\.(.+){2,}/;
-    return e_patt.test(email);
+function isValidEmail(email, callback) {
+    request('https://api.debounce.io/v1/?api=disposable&email='+email, { json: true }, (err, res, body) => {
+        var validForm = /(.+)@(.+){2,}\.(.+){2,}/.test(email);
+        if (err) { 
+            callback(validForm);
+        } else {
+            callback(validForm && !body.disposable);
+        }
+    });
 }
 
 function isValidPhone(area, prefix, line) {

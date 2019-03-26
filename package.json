@@ -17,6 +17,7 @@
     "mongodb": "^3.0.4",
     "nodemailer": "^4.6.8",
     "nodemailer-direct-transport": "^3.3.2",
-    "nodemailer-express-handlebars": "^3.0.0"
+    "nodemailer-express-handlebars": "^3.0.0",
+    "request": "^2.88.0"
   }
 }
