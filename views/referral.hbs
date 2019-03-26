@@ -16,7 +16,6 @@
     $("#error").hide();
 
     function post() {
-        $("#submit")[0].value = "help me" ;//("value", "Help me");
         $.ajax({
             url: '/api/request_referral',
             type: 'POST',

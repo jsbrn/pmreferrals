@@ -5,7 +5,7 @@ function connect() {
     var url = "mongodb+srv://"
         +process.env.MONGODB_USERNAME+":"
         +process.env.MONGODB_PASSWORD
-        +"@"+process.env.MONGODB_URL+"/test?retryWrites=true";
+        +"@"+process.env.MONGODB_URL+"/test?retryWrites=false";
     MongoClient.connect(url, function(err, db) {
         if (err) { console.log("Error connecting to database at URL "+url+" : "+err.message); return; }
         database = db.db(process.env.MONGODB_DATABASE);

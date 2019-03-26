@@ -12,8 +12,8 @@ var options = {
 
 // create reusable transporter object using the default SMTP transport
 const transporter = nodemailer.createTransport({
-    host: 'mail.privateemail.com',
-    port: 465,
+    host: process.env.SMTP_SERVER,
+    port: process.env.SMTP_PORT,
     secure: true, // true for 465, false for other ports
     auth: {
         user: process.env.EMAIL_ADDRESS,
@@ -23,7 +23,7 @@ const transporter = nodemailer.createTransport({
 transporter.use('compile', hbs(options));
 
 function sendTemplate(to, subject, template, context, callback) {
-    context.root = process.env.ROOT_DIRECTORY; //assign a root URL so that external resources can be loaded in the email
+    context.root = process.env.BASE_URL; //add the base url (external url) so email links work properly
     transporter.sendMail({
         from: "PMReferrals.ca <noreply@pmreferrals.ca>",
         to: to,
