@@ -75,25 +75,29 @@ app.get('/', (request, response) => {
 
 app.get('/join', (request, response) => {
     response.render("join", {
-        layout: "main.hbs"
+        layout: "main.hbs",
+        title: "Register your number"
     });
 });
 
 app.get('/referral', (request, response) => {
     response.render("referral", {
         layout: "main.hbs",
+        title: "Get a referral"
     });
 });
 
 app.get('/faq', (request, response) => {
     response.render("faq", {
-        layout: "main.hbs"
+        layout: "main.hbs",
+        title: "FAQ"
     });
 });
 
 app.get('/success', (request, response) => {
     response.render("success", {
-        layout: "main.hbs"
+        layout: "main.hbs",
+        title: "Referral sent"
     });
 });
 
@@ -127,8 +131,7 @@ app.use(express.json());
 
 app.get("/api/email_test", (request, response) => {
     var date = new Date().toISOString();
-    mailer.sendTemplate(process.env.ADMIN_EMAIL, "Test Referral", "referral", {area: 555, prefix: 555, line: 5555, id: "xxxxxxx"}, function(error, info) {
-        console.log(date, error, info);
+    mailer.sendTemplate(process.env.ADMIN_EMAIL, "Test Referral", "referral", {area: 555, prefix: 555, line: 5555, id: "xxxxxxx"}, function(info) {
         response.send(info);
     });
 });
@@ -208,13 +211,8 @@ app.post("/api/request_referral", (request, response) => {
                     database.get("accounts", {id: pastRequest.response}, {}, 1, (results) => {
                         if (results.length > 0) {
                             var acct = results[0];
-                            mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", {area: acct.area, prefix: acct.prefix, line: acct.line}, (error, info) => {
-                                if (error) {
-                                    console.log(error.message);
-                                    response.send({message: "There was an problem sending the email. This happens sometimes. Please try again.", redirect: false});
-                                } else {
-                                    response.send({redirect: true});
-                                }
+                            mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", {area: acct.area, prefix: acct.prefix, line: acct.line}, (info) => {
+                                response.send({tries: info.tries, redirect: true});
                             });
                         } else {
                             //if the old reference points to a deleted account, forget the request, say there was an error and prompt the user to retry
@@ -235,11 +233,11 @@ app.post("/api/request_referral", (request, response) => {
 app.post("/api/request_login", (request, response) => {
     database.get("accounts", {email: request.body.email}, {}, -1, (results) => {
         if (results.length > 0) {
-            mailer.sendTemplate(request.body.email, "Your referral account", "account", {id: results[0].id}, (error, info) => {
-                if (error) response.send("Sending failed, try again"); else response.send("Link sent");
+            mailer.sendTemplate(request.body.email, "Your referral account", "account", {id: results[0].id}, (info) => {
+                response.send("Link sent");
             });
         } else {
-            response.send("No account by that address");
+            response.send({message: "No account by that address"});
         }
     }, (error) => { response.send("Sending failed, try again"); });
 });

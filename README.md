@@ -19,4 +19,6 @@ A handy free service to find a Public Mobile referral number to get the $10 cred
 
 If you're a Public Mobile customer or looking to be one, feel free to poke around the site. If you find a bug, there's a contact form available on the website. Please let me know of any that you find.
 
-\*This domain is a redirect to https://pmreferrals.openode.io for convenience and maintaining the contact email address. Until I can figure out email DNS settings.
+___
+
+*\*This domain is a redirect to https://pmreferrals.openode.io for convenience and maintaining the contact email address. Until I can figure out email DNS settings.*

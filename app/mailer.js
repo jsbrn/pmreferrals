@@ -24,13 +24,22 @@ transporter.use('compile', hbs(options));
 
 function sendTemplate(to, subject, template, context, callback) {
     context.root = process.env.BASE_URL; //add the base url (external url) so email links work properly
+    context.tries = 1; //keep track of how many times the email was attempted to send to the mail server
     transporter.sendMail({
         from: "PMReferrals.ca <noreply@pmreferrals.ca>",
         to: to,
         subject: subject,
         template: template,
         context: context
-    }, callback);
+    }, (error, info) => {
+        if (error) {
+            context.tries++;
+            sendTemplate(to, subject, template, context, callback);
+        } else {
+            info.tries = context.tries;
+            callback(info);
+        }
+    });
 }
 
 function sendHTML(to, subject, html, callback) {
@@ -39,7 +48,15 @@ function sendHTML(to, subject, html, callback) {
         to: to, // list of receivers
         subject: subject, // Subject line
         html: html // html body
-    }, callback);
+    }, (error, info) => {
+        if (error) {
+            context.tries++;
+            sendTemplate(to, subject, template, context, callback);
+        } else {
+            info.tries = context.tries;
+            callback(info);
+        }
+    });
 }
 
 function sendRaw(to, subject, text, callback) {
@@ -48,7 +65,15 @@ function sendRaw(to, subject, text, callback) {
         to: to, // list of receivers
         subject: subject, // Subject line
         text: text // html body
-    }, callback);
+    }, (error, info) => {
+        if (error) {
+            context.tries++;
+            sendTemplate(to, subject, template, context, callback);
+        } else {
+            info.tries = context.tries;
+            callback(info);
+        }
+    });
 }
 
 module.exports.sendTemplate = sendTemplate;
