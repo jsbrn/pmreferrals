@@ -24,7 +24,7 @@ transporter.use('compile', hbs(options));
 
 function sendTemplate(to, subject, template, context, callback) {
     context.root = process.env.BASE_URL; //add the base url (external url) so email links work properly
-    context.tries = 1; //keep track of how many times the email was attempted to send to the mail server
+    if (!context.tries) context.tries = 1;
     transporter.sendMail({
         from: "PMReferrals.ca <noreply@pmreferrals.ca>",
         to: to,
@@ -32,48 +32,23 @@ function sendTemplate(to, subject, template, context, callback) {
         template: template,
         context: context
     }, (error, info) => {
-        if (error) {
+        if (error && context.tries < 25) { //try up to 25 times to send
+            console.log(error.message);
+            console.log("tries = "+context.tries);
             context.tries++;
             sendTemplate(to, subject, template, context, callback);
         } else {
-            info.tries = context.tries;
             callback(info);
         }
     });
 }
 
 function sendHTML(to, subject, html, callback) {
-    transporter.sendMail({
-        from: 'PMReferrals.ca <noreply@pmreferrals.ca>', // sender address
-        to: to, // list of receivers
-        subject: subject, // Subject line
-        html: html // html body
-    }, (error, info) => {
-        if (error) {
-            context.tries++;
-            sendTemplate(to, subject, template, context, callback);
-        } else {
-            info.tries = context.tries;
-            callback(info);
-        }
-    });
+    sendTemplate(to, subject, "html", {html: html}, callback);
 }
 
 function sendRaw(to, subject, text, callback) {
-    transporter.sendMail({
-        from: 'PMReferrals.ca <noreply@pmreferrals.ca>', // sender address
-        to: to, // list of receivers
-        subject: subject, // Subject line
-        text: text // html body
-    }, (error, info) => {
-        if (error) {
-            context.tries++;
-            sendTemplate(to, subject, template, context, callback);
-        } else {
-            info.tries = context.tries;
-            callback(info);
-        }
-    });
+    sendTemplate(to, subject, "raw", {text: text}, callback);
 }
 
 module.exports.sendTemplate = sendTemplate;

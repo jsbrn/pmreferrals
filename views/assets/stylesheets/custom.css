@@ -37,9 +37,10 @@
 .panel, .info-panel, .success-panel, .failure-panel {
 	background: #fff;
 	padding: 10px;
-
-	border-radius: 7px;
-	border: 1px solid black;
+	border-radius: 0px;
+	-webkit-box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
+	-moz-box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
+	box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
 }
 
 .info-panel {
@@ -108,11 +109,16 @@ button:hover, .button:hover {
 
 .green {
 	color: green;
-	text-shadow: 1px 1px 1px rgba(13, 48, 21, 0.8);
 }
 
 .large {
-	font-size: 48px;
+	font-size: 32px;
+	padding-top: 0px;
+}
+
+.medium {
+	font-size: 24px;
+	padding-top: 0px;
 }
 
 a {

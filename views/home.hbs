@@ -1,19 +1,27 @@
 <div class = "container" style = "margin-top: 5%">
-    <h3>Welcome to PMReferrals.ca<sup style = "color: red">BETA</sup></h3>
-    <b>Get a referral code for a new Public Mobile account, OR</b><br>
-    <b>add your number to get referral rewards on your existing account.</b>
-</div>
-<div class = "container" style = "margin-top: 3%">
-    <div class = "row">
-        <a href = "/referral" class = "u-half-width button confirm">Get a referral number</a>
-        <a href = "/join" class = "u-half-width button">Add my number to the list</a><br>
-    </div>
-    <div class = "row">
+    <div class = "two-thirds column">
+        <div class = "row">
+            <h3>Welcome to PMReferrals<sup style = "color: red">BETA</sup></h3>
+            <b>Get a referral code for a new Public Mobile account, OR</b><br>
+            <b>add your number to get referral rewards on your existing account.</b>
+        </div>
+        <div class = "row" style = "margin-top: 3%">
+            <div class = "row">
+                <a href = "/referral" class = "u-half-width button confirm">Get a referral number</a>
+                <a href = "/join" class = "u-half-width button">Add my number to the list</a><br>
+            </div>
+            <div class = "row top-space">
+                <h5>Already registered? Go to your account.</h5>
+                <b>A permalink will be sent to you via email. Make sure <i>noreply@pmreferrals.ca</i> is whitelisted.</b><br><br>
+                <input id = "email" size = "28" type = "text" placeholder = "Email address"></input>
+                <button id = "send_link" onclick = "verifyEmail()" class = "button">View my account</a>
+            </div>
+        </div>
         <hr>
-        <h5>Already registered? Go to your account.</h5>
-        <b>A permalink will be sent to you via email. Make sure <i>noreply@pmreferrals.ca</i> is whitelisted.</b><br><br>
-        <input id = "email" size = "28" type = "text" placeholder = "Email address"></input>
-        <button id = "send_link" onclick = "verifyEmail()" class = "button">View my account</a>
+    </div>
+    <div class = "one-third column">
+            <b class = "large green">{{referral_count}}</b><span style = "margin-left: 10px;">available referral codes</span><br>
+            <b class = "large">{{usage_count}}</b><span style = "margin-left: 10px;">referrals requested so far</span>
     </div>
 </div>
 

@@ -65,3 +65,5 @@ typings/
 *.env
 
 \.openode
+
+*.bat
