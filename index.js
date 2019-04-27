@@ -6,7 +6,6 @@ const express = require('express')
 const app = express()
 const exphbs = require('express-handlebars');
 const database = require('./app/database.js');
-const session = require('express-session');
 //load mailer
 const mailer = require('./app/mailer.js');
 //load validator
@@ -49,15 +48,6 @@ app.use('/css',express.static(path.join(__dirname, 'views/assets/stylesheets')))
 app.use('/scripts',express.static(path.join(__dirname, 'views/assets/scripts')));
 app.use('/audio',express.static(path.join(__dirname, 'views/assets/audio')));
 app.use('/common',express.static(path.join(__dirname, 'app/common')));
-
-/*Enable Express session tracking*/
-app.set('trust proxy', 1) // trust first proxy
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: true }
-}))
 
 /*HTTP REQUEST HANDLERS*/
 
