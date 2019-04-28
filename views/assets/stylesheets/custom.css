@@ -1,3 +1,6 @@
+body {
+	overflow-y: scroll;
+}
 
 .bg-img {
 	background: url("../images/bg.png") no-repeat center center fixed; 

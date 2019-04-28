@@ -6,19 +6,17 @@
             <h5>{{user.email}}</h5>
         </div>
         <div class = "row">
-            <!--hr>
-            <h4>Update your information</h4>
-            <div id = "error" class = "failure-panel bottom-space"></div>
-            <input class = "u-full-width" id = "email" type = "text" placeholder = "New email"></input>
-            <button class = "u-full-width" onclick = "updateEmail()">Change email address</button>
-            <br>
-            <input id = "area" size = "3" maxlength = "3" type = "text" placeholder = "555"></input>
-            <input id = "prefix" size = "3" maxlength = "3" type = "text" placeholder = "555"></input>
-            <input id = "line" size = "4" maxlength = "4" type = "text" placeholder = "5555"></input>
-            <button class = "u-full-width" onclick = "updatePhone()">Change referral number</button>
-            <br-->
-        
             <hr>
+            <h4>Custom referral URL</h4>
+            Use this link to safely share your Public Mobile on public forums. Feel free to change it if you'd like.
+        </div>
+        <div class = "row top-space">
+            <b style = "color: blue;">pmreferrals.ca/referral/</b>
+            <input id = "new_url" maxlength = "16" type = "text" placeholder = "{{user.referral_code}}" onkeyup = "newURLFieldOnKeyUp()"></input>
+            <button id = "update_url" class = "u-full-width" onclick = "updateReferralCode()">Change url</button>
+            <button id = "copy_url" class = "u-full-width" onclick = "copyURL()">Copy url</button>
+        </div>
+        <div class = "row top-space">
             <h4>Delete your account</h4>
             <b>This will remove your number and email address from the database. You will no longer be selected for referrals.</b><br><br>
             <button class = "u-full-width cancel" onclick = "deleteAccount()">Delete my account</button>
@@ -40,7 +38,7 @@
                 {{#if phone_verify}}
                     <button id = "verify_phone" onclick = "verifyPhone()" class = "u-full-width">Send verification SMS</button><br>
                     <input id = "enter_code" class = "u-full-width" type = "text" placeholder = "Enter the code"></input>
-                    <button id = "submit_code" onclick = "verifyCode()" class = "u-full-width">Verify phone</button><br>
+                    <button id = "submit_code" onclick = "verifySMSCode()" class = "u-full-width">Verify phone</button><br>
                 {{/if}}
             </div>
         {{/if}}
@@ -53,11 +51,18 @@
     </div>
 </div>
 
+<!--used as a temporary field to copy the url-->
+<input type="text" value="" id="copier"></input>
+
 <script>
 
     $("#error").hide();
     $("#enter_code").hide();
     $("#submit_code").hide();
+    $("#update_url").hide();
+    $("#new_url")[0].value = "";
+
+    $("#copier").hide();
 
     function verifyEmail() {
         console.log("Sending verification email...");
@@ -80,13 +85,43 @@
         });
     }
 
-    function verifyCode() {
+    function verifySMSCode() {
         console.log("Sending verification SMS...");
         $("#submit_code")[0].innerHTML = "Verifying...";
         post("/api/verify_sms_code", {id: "{{user.id}}", code: $("#enter_code")[0].value}, function(data, status) {
             console.log(data, status);
             if (data.reload) window.location.reload(); else $("#submit_code")[0].innerHTML = data;
         });
+    }
+
+    function updateReferralCode() {
+        console.log("Updating referral code...");
+        $("#update_url")[0].innerHTML = "Changing...";
+        post("/api/update_referral_code", {id: "{{user.id}}", code: $("#new_url")[0].value}, function(data, status) {
+            console.log(data, status);
+            if (data.reload) window.location.reload(); else $("#update_url")[0].innerHTML = data;
+        });
+    }
+
+    function newURLFieldOnKeyUp() {
+        if ($("#new_url")[0].value.length == 0) {
+            $("#update_url").hide();
+            $("#copy_url").show();
+            $("#copy_url")[0].innerHTML = "Copy url";
+        } else {
+            $("#update_url").show();
+            $("#copy_url").hide();
+        }
+    }
+
+    function copyURL() {
+        console.log("copying url {{root}}/referral/{{user.referral_code}}");
+        $("#copier").show();
+        $("#copier")[0].value = "{{root}}/referral/{{user.referral_code}}";
+        $("#copier")[0].select();
+        document.execCommand("copy");
+        $("#copy_url")[0].innerHTML = "Copied URL!";
+        $("#copier").hide();
     }
 
     function deleteAccount() {

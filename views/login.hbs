@@ -1,0 +1,33 @@
+<div class = "container" style = "margin-top: 5%">
+    <div class = "row top-space">
+        <h4>View and edit your PMReferrals account.</h4>
+        <b>A link will be sent to you via email. Make sure <i>noreply@pmreferrals.ca</i> is whitelisted.</b><br><br>
+        <input id = "email" size = "28" type = "text" placeholder = "Email address"></input>
+        <button id = "send_link" onclick = "verifyEmail()" class = "button">View my account</a>
+    </div>
+    <div class = "row top-space">
+        <a href = "/" class = "button">Go back</a>
+    </div>
+</div>
+
+
+<script>
+    function verifyEmail() {
+        $("#send_link")[0].innerHTML = "Sending...";
+        post("/api/request_login", {email: $("#email")[0].value}, function(data, status) {
+            console.log(data, status);
+            $("#send_link")[0].innerHTML = data;
+        });
+    }
+    
+
+    function post(url, data, callback) {
+        $.ajax({
+            url: url,
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: callback
+        });
+    }
+</script>

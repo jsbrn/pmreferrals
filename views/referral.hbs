@@ -26,7 +26,7 @@
     function post() {
         $("#submit")[0].innerHTML = "Working...";
         $.ajax({
-            url: '/api/request_referral',
+            url: '/api/request_referral/{{referral_code}}',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
