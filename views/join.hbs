@@ -3,9 +3,7 @@
     <p>Your number will have a chance to be used by people signing up for Public Mobile. 
         You will recieve $1 in monthly credits for each new referral from your number.
         Go <a target = "_blank" href = "https://www.publicmobile.ca/en/on/get-help/articles/the-refer-a-friend-reward">here</a> to learn more.</p>
-    <p>You will be reminded every month to confirm that you are still a Public Mobile customer. 
-        Your email is required for this. We will not send anything beyond reminders and account notifications.
-    </p>
+    <p>You will be notified when your phone number is selected as a referral.</p>
     <p>If you'd like, you can <a target = "_blank" href = "/faq">read more about how your number is used</a>. <i>You can remove it from the list at any time.</i></p>
     <p><b>Don't add your phone number if you are not comfortable with strangers seeing it!</b></p>
     <div class = "row">
@@ -35,14 +33,13 @@
     $("#error").hide();
 
     function post() {
+        $("#submit")[0].innerHTML = "Submitting...";
         $.ajax({
             url: '/api/submit_join',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
-                area: $("#area")[0].value,
-                prefix: $("#prefix")[0].value,
-                line: $("#line")[0].value,
+                number: $("#area")[0].value+$("#prefix")[0].value+$("#line")[0].value,
                 email: $("#email")[0].value
             }),
             success: function(data, status) {
@@ -50,6 +47,7 @@
                 if (data.redirect)
                     window.location.href = "/user/"+data.message;
                 else error(data.message);
+                $("#submit")[0].innerHTML = "Submit your number";
             }
         });
     }

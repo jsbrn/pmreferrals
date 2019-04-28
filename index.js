@@ -126,7 +126,11 @@ app.get('/user/:id', (request, response, next) => {
             response.render("account", {
                 layout: "main",
                 title: "My account ("+results[0].email+")",
+                root: process.env.BASE_URL,
                 user: results[0],
+                area: results[0].number.substring(0, 3),
+                prefix: results[0].number.substring(3, 6),
+                line: results[0].number.substring(6, 10),
                 verified: results[0].email_verified && results[0].phone_verified,
                 email_verify: !results[0].email_verified,
                 phone_verify: !results[0].phone_verified
@@ -143,23 +147,18 @@ app.use(express.json());
 
 app.post("/api/submit_join", (request, response) => {
 
-    var number = request.body.area + request.body.prefix + request.body.line;
-
     validator.isValidEmail(request.body.email, (email_valid) => {
         if (email_valid) {
-            if (validator.isValidPhone(number)) {
+            if (validator.isValidPhone(request.body.number)) {
                 //if valid email and phone, register account
                 var randomID = Math.random().toString(36).slice(2);
                 var randomReferralCode = Math.random().toString(36).slice(2);
-                database.get("accounts", {$or: [{email: request.body.email}, {full_number: number}]}, {}, -1, (results) => {
+                database.get("accounts", {$or: [{email: request.body.email}, {number: request.body.number}]}, {}, -1, (results) => {
                     if (results.length == 0) {
                         database.insert("accounts", [{
                             id: randomID,
                             email: request.body.email,
-                            area: request.body.area,
-                            prefix: request.body.prefix,
-                            line: request.body.line,
-                            full_number: number,
+                            number: request.body.number,
                             email_verified: false,
                             phone_verified: false,
                             verification_code: Math.floor((Math.random() * 8999 + 1000)), //random 4 digit number,
@@ -200,10 +199,11 @@ app.post("/api/request_referral", (request, response) => {
                             var random = results[Math.floor(Math.random()*results.length)];
                             //send the referral and notification, if successful then add request to database and send redirect signal
                             database.insert("requests", [{email: request.body.email, response: random.id, date: new Date()}], () => {
-                                mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", {area: random.area, prefix: random.prefix, line: random.line}, (info) => {
-                                    mailer.sendTemplate(random.email, "Your Public Mobile number was selected", "referral_notification", {email: request.body.email}, (info) => {
-                                        response.send({redirect: true});
-                                    });
+                                mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", 
+                                    {area: acct.number.substring(0, 3), prefix: acct.number.substring(3, 6), line: acct.number.substring(6, 10)}, (info) => {
+                                        mailer.sendTemplate(random.email, "Your Public Mobile number was selected", "referral_notification", {email: request.body.email}, (info) => {
+                                            response.send({redirect: true});
+                                        });
                                 });
                             }, (error) => {
                                 response.send({message: error.message, redirect: false});
@@ -218,8 +218,9 @@ app.post("/api/request_referral", (request, response) => {
                     database.get("accounts", {id: pastRequest.response}, {}, 1, (results) => {
                         if (results.length > 0) {
                             var acct = results[0];
-                            mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", {area: acct.area, prefix: acct.prefix, line: acct.line}, (info) => {
-                                response.send({tries: info.tries, redirect: true});
+                            mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", 
+                                {area: acct.number.substring(0, 3), prefix: acct.number.substring(3, 6), line: acct.number.substring(6, 10)}, (info) => {
+                                    response.send({tries: info.tries, redirect: true});
                             });
                         } else {
                             //if the old reference points to a deleted account, forget the request, say there was an error and prompt the user to retry
@@ -254,10 +255,11 @@ app.post("/api/request_referral/:code", (request, response) => {
                             //send the referral and notification, if successful then add request to database and send redirect signal
                             //TODO: move this to function (it's copy-pasted from above)
                             database.insert("requests", [{email: request.body.email, response: random.id, date: new Date()}], () => {
-                                mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", {area: random.area, prefix: random.prefix, line: random.line}, (info) => {
-                                    mailer.sendTemplate(random.email, "Your referral link has bee", "referral_notification", {email: request.body.email}, (info) => {
-                                        response.send({redirect: true});
-                                    });
+                                mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", 
+                                    {area: acct.number.substring(0, 3), prefix: acct.number.substring(3, 6), line: acct.number.substring(6, 10)}, (info) => {
+                                        mailer.sendTemplate(random.email, "Your referral link has bee", "referral_notification", {email: request.body.email}, (info) => {
+                                            response.send({redirect: true});
+                                        });
                                 });
                             }, (error) => {
                                 response.send({message: error.message, redirect: false});
@@ -306,7 +308,7 @@ app.post("/api/send_verification_sms", (request, response) => {
     database.get("accounts", {id: request.body.id}, {}, 1, (results) => {
         if (results.length > 0) {
             var acct = results[0];
-            mailer.sendRaw(acct.full_number+"@msg.telus.com", "Verify your SMS", 
+            mailer.sendRaw(acct.number+"@msg.telus.com", "Verify your SMS", 
                 "If this is your Public Mobile number, enter the code "+acct.verification_code+". Do not reply to this message.", (info) => {
                     response.send("SMS Sent");
             });
