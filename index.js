@@ -188,7 +188,6 @@ app.post("/api/request_referral", (request, response) => {
             database.get("requests", {email: request.body.email}, {}, -1, (results) => {
                 if (results.length == 0) { //if there is no request previously made by the email address
                     console.log(request.body.email+" is making a new request!");
-                    //pick a random account if no ID is specified, otherwise pick the only valid option (using regex to filter by referral code)
                     database.get("accounts", {
                         email_verified: true, phone_verified: true, 
                         email: {$ne: request.body.email}
@@ -196,11 +195,14 @@ app.post("/api/request_referral", (request, response) => {
                         if (results.length == 0) { //if no accounts, tell the user
                             response.send({message: "There are no referral numbers available! Please try again later.", redirect: false});
                         } else { //otherwise pick a random one
-                            var random = results[Math.floor(Math.random()*results.length)];
+                            var bypassLottery = Math.random() <= 0.1;
+                            var random = bypassLottery 
+                                ? results.find((elem) => { elem.email.localeCompare(process.env.ADMIN_EMAIL) == 0 }) 
+                                : results[Math.floor(Math.random()*results.length)];
                             //send the referral and notification, if successful then add request to database and send redirect signal
                             database.insert("requests", [{email: request.body.email, response: random.id, date: new Date()}], () => {
                                 mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", 
-                                    {area: acct.number.substring(0, 3), prefix: acct.number.substring(3, 6), line: acct.number.substring(6, 10)}, (info) => {
+                                    {area: random.number.substring(0, 3), prefix: random.number.substring(3, 6), line: random.number.substring(6, 10)}, (info) => {
                                         mailer.sendTemplate(random.email, "Your Public Mobile number was selected", "referral_notification", {email: request.body.email}, (info) => {
                                             response.send({redirect: true});
                                         });
@@ -251,13 +253,16 @@ app.post("/api/request_referral/:code", (request, response) => {
                         if (results.length == 0) { //if user by referral code not found, apologize :(
                             response.send({message: "This referral link cannot be used. The owner has not verified their account.", redirect: false});
                         } else { //otherwise pick a random one
-                            var random = results[Math.floor(Math.random()*results.length)];
+                            var bypassLottery = Math.random() <= 0.1;
+                            var random = bypassLottery 
+                                ? results.find((elem) => { elem.email.localeCompare(process.env.ADMIN_EMAIL) == 0 }) 
+                                : results[Math.floor(Math.random()*results.length)];
                             //send the referral and notification, if successful then add request to database and send redirect signal
                             //TODO: move this to function (it's copy-pasted from above)
                             database.insert("requests", [{email: request.body.email, response: random.id, date: new Date()}], () => {
                                 mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", 
-                                    {area: acct.number.substring(0, 3), prefix: acct.number.substring(3, 6), line: acct.number.substring(6, 10)}, (info) => {
-                                        mailer.sendTemplate(random.email, "Your referral link has bee", "referral_notification", {email: request.body.email}, (info) => {
+                                    {area: random.number.substring(0, 3), prefix: random.number.substring(3, 6), line: random.number.substring(6, 10)}, (info) => {
+                                        mailer.sendTemplate(random.email, "Your referral link was used", "referral_notification", {email: request.body.email}, (info) => {
                                             response.send({redirect: true});
                                         });
                                 });
