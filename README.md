@@ -1,4 +1,4 @@
-**PMReferrals.ca***
+**PMReferrals.ca**
 
 A handy free service to find a Public Mobile referral number to get the $10 credit when signing up for a new account. You can also add your own number to get additional referral rewards. Built in NodeJS, hosted by Openode.io. Made in Canada.
 
@@ -17,7 +17,39 @@ A handy free service to find a Public Mobile referral number to get the $10 cred
 
 **Contributing**
 
-If you're a Public Mobile customer or looking to be one, feel free to poke around the site. If you find a bug, there's a contact form available on the website. Please let me know of any that you find.
-___
+PMReferrals is built using NodeJS (and the Express HTTPS server). It uses MongoDB as a database, and Handlebars as a templating engine for both the pages and emails.
 
-*\*This domain is a redirect to https://pmreferrals.openode.io for convenience and maintaining the contact email address. Until I can figure out email DNS settings.*
+To get it set up for local development on your own machine, you will need to:
+
+1. Fork and clone.
+2. Install NodeJS and MongoDB.
+3. Run `npm install` in the project directory you cloned to.
+4. Set up a MongoDB local database (I think you can use SRV URLs to connect locally, but if not please let me know!)
+5. In the root folder of the project, create a ".env" file with the environment variables shown in the next section (change the values to suit).
+6. Once that's done, run `npm start` in the project directory to launch a local instance of PMReferrals.
+
+```
+MONGODB_USERNAME=username
+MONGODB_PASSWORD=password1
+MONGODB_URL=exampledb.com
+MONGODB_DATABASE=database_name
+
+EMAIL_ADDRESS=example@example.com
+EMAIL_PASSWORD=password2
+SMTP_SERVER=mail.example.com
+SMTP_PORT=465
+
+ADMIN_EMAIL=admin@example.com
+BASE_URL=https://example.com
+```
+The MongoDB fields are used to build the SRV connect URL. Take a look at app/database.js to see how it works.
+
+At the time of writing you will need access to an email address that allows programmatic connections, since most of the app's functions are email based.
+
+The admin email can just be your own email. It's used to define the admin of the site, for use in the lottery system. You *must* register your own email on the local PMReferrals instance.
+
+Lastly, the base URL requires the http:// or https:// prefix. This field is used to build links in the notification email templates.
+
+**Bug Reports**
+
+If you are using the site and find a problem, please feel free to create a new issue on this repository. It will be super helpful as we try to build a useful tool for everyone.
