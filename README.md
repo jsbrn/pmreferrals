@@ -28,6 +28,10 @@ To get it set up for local development on your own machine, you will need to:
 5. In the root folder of the project, create a ".env" file with the environment variables shown in the next section (change the values to suit).
 6. Once that's done, run `npm start` in the project directory to launch a local instance of PMReferrals.
 
+**Environment Variables**
+
+The project reads environment variables from a .env file in the root directory. Here are the configuration details. Change the values to suit your specific setup.
+
 ```
 MONGODB_USERNAME=username
 MONGODB_PASSWORD=password1
@@ -44,7 +48,7 @@ BASE_URL=https://example.com
 ```
 The MongoDB fields are used to build the SRV connect URL. Take a look at app/database.js to see how it works.
 
-At the time of writing you will need access to an email address that allows programmatic connections, since most of the app's functions are email based.
+At the time of writing you will need access to an email address that allows programmatic connections, since most of the app's functions are email based. If you don't fill in this section, email won't work or the app will crash. It hasn't been tested yet.
 
 The admin email can just be your own email. It's used to define the admin of the site, for use in the lottery system. You *must* register your own email on the local PMReferrals instance.
 
