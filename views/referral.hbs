@@ -26,16 +26,17 @@
     function post() {
         $("#submit")[0].innerHTML = "Working...";
         $.ajax({
-            url: '/api/request_referral/{{referral_code}}',
+            url: '/api/request_referral',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
-                email: $("#email")[0].value
+                email: $("#email")[0].value,
+                referral_code: "{{referral_code}}"
             }),
             success: function(data, status) {
                 console.log(data, status);
-                if (data.redirect) window.location.href = "/success"; else error(data.message);
-                if (!data.redirect) $("#submit")[0].innerHTML = "Get referral";
+                if (data.accepted) window.location.href = "/success"; else error(data.reason);
+                if (!data.accepted) $("#submit")[0].innerHTML = "Get referral";
             }
         });
     }
