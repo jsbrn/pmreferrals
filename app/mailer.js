@@ -55,17 +55,17 @@ function sendRaw(to, subject, text, callback) {
  * SOME HELPER FUNCTIONS
  */
 
- function sendReferral(to_address, from_account, callback) {
-     console.log(JSON.stringify(from_account));
+ function sendReferral(to_address, from_account) {
+    console.log(JSON.stringify(from_account));
     sendTemplate(to_address, "Your Public Mobile referral", "referral", {
         area: from_account.number.substring(0, 3),
         prefix: from_account.number.substring(3, 6),
         line: from_account.number.substring(6, 10)
-    }, (info) => {
-        sendTemplate(from_account.email, "Your referral has been selected!", "referral_notification", {
-            email: to_address
-        }, callback(info));
-    });
+    }, (info) => {});
+
+    sendTemplate(from_account.email, "Your referral has been selected!", "referral_notification", {
+        email: to_address
+    }, (info) => {});
  }
 
  function sendVerificationSMS(number, callback) {

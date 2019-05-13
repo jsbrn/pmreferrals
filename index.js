@@ -204,10 +204,10 @@ app.post("/api/request_referral", (request, response, next) => {
                 database.get("requests", {email: request.body.email}, {}, 1, (requests) => {
                     if (requests.length < 1) { //if there are no matches, send and update the requests table
                         //send mail
-                        if (!request.body.test) mailer.sendReferral(request.email, randomAccount);
+                        if (!request.body.test) mailer.sendReferral(request.body.email, randomAccount);
                         //update requests table
                         if (!request.body.test) database.insert("requests", [{
-                            email: request.email,
+                            email: request.body.email,
                             response: randomAccount.id,
                             date: new Date(),
                             random: request.body.referral_code.length == 0
