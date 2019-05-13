@@ -14,6 +14,8 @@ services:
   redis:
     image: redis:5-alpine
     container_name: cache
+    volumes:
+      - /opt/app/db/:/data/db
     expose:
       - 6379
 

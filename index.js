@@ -210,7 +210,7 @@ app.post("/api/request_referral", (request, response, next) => {
                             email: request.body.email,
                             response: randomAccount.id,
                             date: new Date(),
-                            random: request.body.referral_code.length == 0
+                            random: !request.body.referral_code
                         }], (inserted) => {}, (error) => { response.sendStatus(502); });
                         //send the response back to the database
                         response.send({accepted: true, index: randomIndex});
