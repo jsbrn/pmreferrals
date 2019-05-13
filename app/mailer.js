@@ -51,6 +51,30 @@ function sendRaw(to, subject, text, callback) {
     sendTemplate(to, subject, "raw", {text: text}, callback);
 }
 
+/**
+ * SOME HELPER FUNCTIONS
+ */
+
+ function sendReferral(to_address, from_account) {
+    console.log(JSON.stringify(from_account));
+    sendTemplate(to_address, "Your Public Mobile referral", "referral", {
+        area: from_account.number.substring(0, 3),
+        prefix: from_account.number.substring(3, 6),
+        line: from_account.number.substring(6, 10)
+    }, (info) => {});
+
+    sendTemplate(from_account.email, "Your referral has been selected!", "referral_notification", {
+        email: to_address
+    }, (info) => {});
+ }
+
+ function sendVerificationSMS(number, callback) {
+    mailer.sendRaw(number+"@msg.telus.com", "Verify your SMS", 
+        "If this is your Public Mobile number, enter the code "+acct.verification_code+". Do not reply to this message.", callback(info));
+ }
+
 module.exports.sendTemplate = sendTemplate;
 module.exports.sendHTML = sendHTML;
 module.exports.sendRaw = sendRaw;
+module.exports.sendReferral = sendReferral;
+module.exports.sendVerificationSMS = sendVerificationSMS;

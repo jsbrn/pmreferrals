@@ -1,0 +1,1 @@
+openode add-storage-area db/ && openode set-config REDIR_HTTP_TO_HTTPS true && openode set-config SSL_CERTIFICATE_PATH ssl/cert.crt &&openode set-config SSL_CERTIFICATE_KEY_PATH ssl/private.key && openode deploy

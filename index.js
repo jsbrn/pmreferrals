@@ -143,155 +143,102 @@ app.get('/user/:id', (request, response, next) => {
 
 app.use(express.json());
 
-/* REFERRAL/ACCOUNT API */
+app.post("/api/create_account", (request, response, next) => {
 
-app.post("/api/submit_join", (request, response) => {
+    if (!request.body.email || !request.body.number) { next(); return; }
 
-    validator.isValidEmail(request.body.email, (email_valid) => {
-        if (email_valid) {
-            if (validator.isValidPhone(request.body.number)) {
-                //if valid email and phone, register account
-                var randomID = Math.random().toString(36).slice(2);
-                var randomReferralCode = Math.random().toString(36).slice(2);
-                database.get("accounts", {$or: [{email: request.body.email}, {number: request.body.number}]}, {}, -1, (results) => {
-                    if (results.length == 0) {
+    validator.isValidEmail(request.body.email, () => {
+        if (validator.isValidPhone(request.body.number)) {
+            //if valid email and phone, register account
+            var randomID = Math.random().toString(36).slice(2);
+            var randomReferralCode = Math.random().toString(36).slice(2);
+            database.get("accounts", {$or: [{email: request.body.email}, {number: request.body.number}]}, {}, -1, (results) => {
+                if (results.length == 0) {
+                    if (!request.body.test) {
                         database.insert("accounts", [{
                             id: randomID,
                             email: request.body.email,
-                            number: request.body.number,
+                            number: JSON.stringify(request.body.number),
                             email_verified: false,
                             phone_verified: false,
                             verification_code: Math.floor((Math.random() * 8999 + 1000)), //random 4 digit number,
                             referral_code: randomReferralCode
                         }], () => {
-                            response.send({message: randomID, redirect: true}); 
-                        }, (error) => { 
-                            response.send({message: error.message, redirect: false});
-                        });
-                    } else {
-                        response.send({message: "This email or phone number has already been registered.", redirect: false});
+                            response.send({accepted: true, id: randomID});
+                        }, (error) => { response.sendStatus(502); });
+                    } else { //if testing, send the response but do not update the database
+                        response.send({accepted: true, id: randomID});
                     }
-                }, (error) => { response.send({message: error.message, redirect: false}); });
-            } else {
-                response.send({message: "You have entered an invalid phone number.", redirect: false});
-            }
+                } else {
+                    response.send({accepted: false, reason: "This email or phone number has already been registered."});
+                }
+            }, (error) => { response.sendStatus(502); });
         } else {
-            response.send({message: "You have entered an invalid email address.", redirect: false});
+            response.send({accepted: false, reason: "You have entered an invalid phone number."});
         }
+    }, () => { //invalid email address
+        response.send({accepted: false, reason: "You have entered an invalid email address."})
     });
 
 });
 
-app.post("/api/request_referral", (request, response) => {
-    validator.isValidEmail(request.body.email, (email_valid) => {
-        if (email_valid) {
-            database.get("requests", {email: request.body.email}, {}, -1, (results) => {
-                if (results.length == 0) { //if there is no request previously made by the email address
-                    console.log(request.body.email+" is making a new request!");
-                    database.get("accounts", {
-                        email_verified: true, phone_verified: true, 
-                        email: {$ne: request.body.email}
-                    }, {}, -1, (results) => {
-                        if (results.length == 0) { //if no accounts, tell the user
-                            response.send({message: "There are no referral numbers available! Please try again later.", redirect: false});
-                        } else { //otherwise pick a random one
-                            var bypassLottery = Math.random() <= 0.1;
-                            var random = bypassLottery 
-                                ? results.find((elem) => { elem.email.localeCompare(process.env.ADMIN_EMAIL) == 0 }) 
-                                : results[Math.floor(Math.random()*results.length)];
-                            //send the referral and notification, if successful then add request to database and send redirect signal
-                            database.insert("requests", [{email: request.body.email, response: random.id, date: new Date()}], () => {
-                                mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", 
-                                    {area: random.number.substring(0, 3), prefix: random.number.substring(3, 6), line: random.number.substring(6, 10)}, (info) => {
-                                        mailer.sendTemplate(random.email, "Your Public Mobile number was selected", "referral_notification", {email: request.body.email}, (info) => {
-                                            response.send({redirect: true});
-                                        });
-                                });
-                            }, (error) => {
-                                response.send({message: error.message, redirect: false});
-                            });
-                        }
-                    }, (error) => { response.send({message: error.message, redirect: false})});
-                } else { //if email has already requested a referral, send them the one they got last time
-                    console.log(request.body.email+" is requesting a referral again!");
-                    var pastRequest = results[0];
-                    console.log(JSON.stringify(pastRequest));
-                    //get the associated account and send the phone number
-                    database.get("accounts", {id: pastRequest.response}, {}, 1, (results) => {
-                        if (results.length > 0) {
-                            var acct = results[0];
-                            mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", 
-                                {area: acct.number.substring(0, 3), prefix: acct.number.substring(3, 6), line: acct.number.substring(6, 10)}, (info) => {
-                                    response.send({tries: info.tries, redirect: true});
-                            });
-                        } else {
-                            //if the old reference points to a deleted account, forget the request, say there was an error and prompt the user to retry
-                            database.remove("requests", {email: request.body.email}, () => {
-                                response.send({message: "The server encountered an error. Please try again.", redirect: false});
-                            }, (error) => { response.send({message: "The server encountered an error. Please try again.", redirect: false})});
-                        }
-                    }, (error) => { response.send({message: error.message, redirect: false})});
-                }
-            }, (error) => { response.send({message: error.message, redirect: false}); });
-        } else {
-            response.send({message: "You have entered an invalid email address.", redirect: false});
-        }
-    });
-        
-});
+/**
+ * Requesting a referral.
+ */
+app.post("/api/request_referral", (request, response, next) => {
 
-app.post("/api/request_referral/:code", (request, response) => {
-    validator.isValidEmail(request.body.email, (email_valid) => {
-        if (email_valid) {
-            database.get("requests", {email: request.body.email}, {}, -1, (results) => {
-                if (results.length == 0) { //if there is no request previously made by the email address
-                    //pick a random account if no ID is specified, otherwise pick the only valid option (using regex to filter by referral code)
-                    database.get("accounts", {
-                        email_verified: true, phone_verified: true,
-                        referral_code: request.params.code
-                    }, {}, -1, (results) => {
-                        if (results.length == 0) { //if user by referral code not found, apologize :(
-                            response.send({message: "This referral link cannot be used. The owner has not verified their account.", redirect: false});
-                        } else { //otherwise pick a random one
-                            var bypassLottery = Math.random() <= 0.1;
-                            var random = bypassLottery 
-                                ? results.find((elem) => { elem.email.localeCompare(process.env.ADMIN_EMAIL) == 0 }) 
-                                : results[Math.floor(Math.random()*results.length)];
-                            //send the referral and notification, if successful then add request to database and send redirect signal
-                            //TODO: move this to function (it's copy-pasted from above)
-                            database.insert("requests", [{email: request.body.email, response: random.id, date: new Date()}], () => {
-                                mailer.sendTemplate(request.body.email, "Your Public Mobile referral", "referral", 
-                                    {area: random.number.substring(0, 3), prefix: random.number.substring(3, 6), line: random.number.substring(6, 10)}, (info) => {
-                                        mailer.sendTemplate(random.email, "Your referral link was used", "referral_notification", {email: request.body.email}, (info) => {
-                                            response.send({redirect: true});
-                                        });
-                                });
-                            }, (error) => {
-                                response.send({message: error.message, redirect: false});
-                            });
-                        }
-                    }, (error) => { response.send({message: error.message, redirect: false})});
-                } else { //if email has already requested a referral, deny
-                    response.send({message: "This email has already been used to get a referral.", redirect: false});
-                }
-            }, (error) => { response.send({message: error.message, redirect: false}); });
-        } else {
-            response.send({message: "You have entered an invalid email address.", redirect: false});
-        }
-    });
-        
+    //ensure all required fields are present
+    if (!request.body.email) { next(); return; }
+    //determine the query object based on what type of referral it is (random or specific to a user)
+    var query = !request.body.referral_code
+        ? {email_verified: true, phone_verified: true, email: {$ne: request.body.email}} 
+        : {email_verified: true, phone_verified: true, email: {$ne: request.body.email}, referral_code: request.body.referral_code};
+    //query the accounts table
+    database.get("accounts", query, {}, -1, (accounts) => {
+        if (accounts.length > 0) { //if there is an available account, pick a random one
+
+            var randomIndex = Math.floor(Math.random()*accounts.length);
+            var randomAccount = accounts[randomIndex];
+
+            validator.isValidEmail(request.body.email, () => { //
+                database.get("requests", {email: request.body.email}, {}, 1, (requests) => {
+                    if (requests.length < 1) { //if there are no matches, send and update the requests table
+                        //send mail
+                        if (!request.body.test) mailer.sendReferral(request.body.email, randomAccount);
+                        //update requests table
+                        if (!request.body.test) database.insert("requests", [{
+                            email: request.body.email,
+                            response: randomAccount.id,
+                            date: new Date(),
+                            random: request.body.referral_code.length == 0
+                        }], (inserted) => {}, (error) => { response.sendStatus(502); });
+                        //send the response back to the database
+                        response.send({accepted: true, index: randomIndex});
+                    } else { //otherwise, inform the client
+                        response.send({accepted: false, reason: "This email address has already been used to get a referral."});
+                    }
+                }, (error) => { response.sendStatus(502); });
+            }, () => { response.send({accepted: false, reason: "Email address is invalid."})});
+
+        } else { response.send({accepted: false, reason: "No referrals are available at this time."}); }
+    }, (error) => { response.sendStatus(502); });
+
 });
 
 app.post("/api/request_login", (request, response) => {
     database.get("accounts", {email: request.body.email}, {}, -1, (results) => {
         if (results.length > 0) {
-            mailer.sendTemplate(request.body.email, "Your referral account", "account", {id: results[0].id}, (info) => {
-                response.send("Link sent");
-            });
+            if (!request.body.test) {
+                mailer.sendTemplate(request.body.email, "Your referral account", "account", {id: results[0].id}, (info) => {
+                    response.send({accepted: true});
+                });
+            } else {
+                response.send({accepted: true});
+            }
         } else {
-            response.send("No account by that address");
+            response.send({accepted: false, reason: "No account by that address"});
         }
-    }, (error) => { response.send("Sending failed, try again"); });
+    }, (error) => { response.send(502); });
 });
 
 /* VERIFICATION API */
@@ -313,9 +260,8 @@ app.post("/api/send_verification_sms", (request, response) => {
     database.get("accounts", {id: request.body.id}, {}, 1, (results) => {
         if (results.length > 0) {
             var acct = results[0];
-            mailer.sendRaw(acct.number+"@msg.telus.com", "Verify your SMS", 
-                "If this is your Public Mobile number, enter the code "+acct.verification_code+". Do not reply to this message.", (info) => {
-                    response.send("SMS Sent");
+            mailer.sendVerificationSMS(acct.number, (info) => {
+                response.send("SMS Sent");
             });
         } else {
             response.send("Send failed, try again");
@@ -375,6 +321,11 @@ app.post("/api/test/send_raw_email", (request, response) => {
     mailer.sendRaw(request.body.to, request.body.subject, request.body.text, (info) => {
         response.send(info);
     });
+});
+
+//catch all for API requests: previous handlers will send the request to this one if the request is missing critical fields
+app.post('/api/*', (request, response) => {
+    response.sendStatus(400);
 });
 
 //catchall and 404

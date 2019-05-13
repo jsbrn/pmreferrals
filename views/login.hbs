@@ -10,15 +10,19 @@
 
 
 <script>
+
     function verifyEmail() {
         $("#send_link")[0].innerHTML = "Sending...";
         post("/api/request_login", {email: $("#email")[0].value}, function(data, status) {
             console.log(data, status);
-            $("#send_link")[0].innerHTML = data;
+            if (data.accepted) {
+                $("#send_link")[0].innerHTML = "Link sent";
+            } else {
+                $("#send_link")[0].innerHTML = data.reason;
+            }
         });
     }
     
-
     function post(url, data, callback) {
         $.ajax({
             url: url,
