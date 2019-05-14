@@ -154,21 +154,25 @@ app.post("/api/create_account", (request, response, next) => {
             var randomReferralCode = Math.random().toString(36).slice(2);
             database.get("accounts", {$or: [{email: request.body.email}, {number: request.body.number}]}, {}, -1, (results) => {
                 if (results.length == 0) {
+
+                    var newAccount = {
+                        id: randomID,
+                        email: request.body.email,
+                        number: ""+request.body.number,
+                        email_verified: false,
+                        phone_verified: false,
+                        verification_code: Math.floor((Math.random() * 8999 + 1000)), //random 4 digit number,
+                        referral_code: randomReferralCode
+                    };
+
                     if (!request.body.test) {
-                        database.insert("accounts", [{
-                            id: randomID,
-                            email: request.body.email,
-                            number: JSON.stringify(request.body.number),
-                            email_verified: false,
-                            phone_verified: false,
-                            verification_code: Math.floor((Math.random() * 8999 + 1000)), //random 4 digit number,
-                            referral_code: randomReferralCode
-                        }], () => {
-                            response.send({accepted: true, id: randomID});
+                        database.insert("accounts", [newAccount], () => {
+                            response.send({accepted: true, account: newAccount});
                         }, (error) => { response.sendStatus(502); });
                     } else { //if testing, send the response but do not update the database
-                        response.send({accepted: true, id: randomID});
+                        response.send({accepted: true, account: newAccount});
                     }
+                    
                 } else {
                     response.send({accepted: false, reason: "This email or phone number has already been registered."});
                 }
