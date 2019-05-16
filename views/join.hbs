@@ -47,7 +47,7 @@
             success: function(data, status) {
                 console.log(data, status);
                 if (data.accepted)
-                    window.location.href = "/user/"+data.id;
+                    window.location.href = "/user/"+data.account.id;
                 else { error(data.reason); $("#submit")[0].innerHTML = "Register your number"; }
             }
         });
