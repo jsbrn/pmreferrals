@@ -1,4 +1,6 @@
 const request = require('request');
+const https = require('https');
+const axios = require('axios');
 
 function isValidEmail(email, ifValid, ifInvalid) {
     request('https://api.debounce.io/v1/?api=disposable&email='+email, { json: true }, (err, res, body) => {
@@ -17,5 +19,26 @@ function isValidPhone(number) {
     return n_patt.test(number) && number.length == 10;
 }
 
+function isValidReferral(refcode, callback) {
+    // At request level
+    const agent = new https.Agent({  
+        rejectUnauthorized: false
+    });
+    
+    axios.get('https://activate.publicmobile.ca/?raf=' + refcode, { httpsAgent: agent })
+        .then(function (axios_response) {
+            //if it has the green checkmark it's a valid code
+            callback({
+                valid: axios_response.data.includes("ok_16x16")
+            })
+        })
+        .catch(function (err) {
+            callback({
+                error: err
+            });
+        });
+}
+
 module.exports.isValidEmail = isValidEmail;
 module.exports.isValidPhone = isValidPhone;
+module.exports.isValidReferral = isValidReferral;
