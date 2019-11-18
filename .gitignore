@@ -71,3 +71,11 @@ typings/
 ssl/
 
 .env.production
+
+*.exe
+
+*.env
+
+\.openode
+
+ssl/

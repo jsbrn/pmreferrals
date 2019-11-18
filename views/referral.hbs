@@ -1,13 +1,16 @@
 <div class = "container large-top-space">
-    <h4>Enter your email</h4>
-    <p>Your referral number will be sent to this address. The owner of the phone number will be notified of the referral.</p>
+    <h4>Enter your email to get {{#if referral_code}}a referral from {{referral_code}}{{else}}a random referral{{/if}}</h4>
+    <p>
+        The referral will be sent to your address. 
+        {{#if referral_code}}<b>{{referral_code}}</b>{{else}}The owner of the phone number{{/if}} will be notified of the referral.
+    </p>
     <div class = "row">
         <form id = "referral_form">
             <input id = "email" size = "28" type = "text" placeholder = "example@example.com"></input>
         </form>
         <div id = "error" class = "failure-panel bottom-space">Test</div>
         <button id = "submit" onclick = "post()" class = "confirm" type="submit" form="form1" value="submit">Get referral</button>
-        <a href = "/" class = "button">Back to home page</a>
+        <a href = "/" class = "button">Go home</a>
         <br>
         <script type="text/javascript"> //<![CDATA[
             var tlJsHost = ((window.location.protocol == "https:") ? "https://secure.trust-provider.com/" : "http://www.trustlogo.com/");
@@ -26,16 +29,17 @@
     function post() {
         $("#submit")[0].innerHTML = "Working...";
         $.ajax({
-            url: '/api/request_referral/{{referral_code}}',
+            url: '/api/request_referral',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
-                email: $("#email")[0].value
+                email: $("#email")[0].value,
+                referral_code: "{{referral_code}}"
             }),
             success: function(data, status) {
                 console.log(data, status);
-                if (data.redirect) window.location.href = "/success"; else error(data.message);
-                if (!data.redirect) $("#submit")[0].innerHTML = "Get referral";
+                if (data.accepted) window.location.href = "/success"; else error(data.reason);
+                if (!data.accepted) $("#submit")[0].innerHTML = "Get referral";
             }
         });
     }

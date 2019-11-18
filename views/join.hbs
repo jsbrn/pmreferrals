@@ -1,7 +1,7 @@
 <div class = "container large-top-space">
     <h4>Submit your Public Mobile referral code</h4>
     <div class = "row">
-        <form id = "join_form" action = "/api/submit_join">
+        <form id = "join_form">
             <input id = "area" maxlength = "3" size = "3" type = "text" placeholder = "555"></input>
             <input id = "prefix" maxlength = "3" size = "3" type = "text" placeholder = "555"></input>
             <input id = "line" maxlength = "4" size = "4" type = "text" placeholder = "5555"></input>
@@ -9,8 +9,8 @@
             <input id = "email" type = "text" placeholder = "Your email"></input>
         </form>
         <div id = "error" class = "failure-panel bottom-space"></div>
-        <button id = "submit" onclick = "post()" class = "confirm">Submit your number</button>
-        <a href = "/" class = "button">Go back</a>
+        <button id = "submit" onclick = "post()" class = "confirm">Register your number</button>
+        <a href = "/" class = "button">Go home</a>
         <br>
         <script type="text/javascript"> //<![CDATA[
             var tlJsHost = ((window.location.protocol == "https:") ? "https://secure.trust-provider.com/" : "http://www.trustlogo.com/");
@@ -29,7 +29,7 @@
     function post() {
         $("#submit")[0].innerHTML = "Submitting...";
         $.ajax({
-            url: '/api/submit_join',
+            url: '/api/create_account',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
@@ -38,17 +38,16 @@
             }),
             success: function(data, status) {
                 console.log(data, status);
-                if (data.redirect)
-                    window.location.href = "/user/"+data.message;
-                else error(data.message);
-                $("#submit")[0].innerHTML = "Submit your number";
+                if (data.accepted)
+                    window.location.href = "/user/"+data.account.id;
+                else { error(data.reason); $("#submit")[0].innerHTML = "Register your number"; }
             }
         });
     }
 
     function error(message) {
         if (message == undefined || message.length <= 0) { 
-            $("#error").fadeOut(50); 
+            $("#error").fadeOut(50);
         } else {
             $("#error").fadeOut(50).fadeIn(100);
             $("#error").text(message);
