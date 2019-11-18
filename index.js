@@ -6,13 +6,10 @@ const express = require('express')
 const app = express()
 const exphbs = require('express-handlebars');
 const database = require('./app/database.js');
-//load mailer
+const cleanup = require('./app/cleanup.js');
+const utilities = require('./app/utilities.js')
 const mailer = require('./app/mailer.js');
-//load validator
 const validator = require('./app/validator.js');
-//if not running on Now instance, require dotenv
-//(reads environment variables from a .env file on the local repo)
-
 
 /*Set the Handlebars options, including the Helpers*/
 app.engine('.hbs', exphbs({
@@ -20,21 +17,11 @@ app.engine('.hbs', exphbs({
       extname: '.hbs',
       layoutsDir: path.join(__dirname, 'views/layouts'),
       helpers: {
-          playerStatus: (player) => {
+          cardRow: (rowArray) => {
               console.log(JSON.stringify(player));
               var status = player.banned ? "banned" : (player.online ? "online" : "offline");
               status = status + (!player.member ? "-guest" : "");
               return status;
-          },
-          playerStatusDesc: (player) => {
-                console.log(JSON.stringify(player));
-                var status = (player.banned ? "Banned " : "") 
-                    + (player.member ? "Member" : "Guest") 
-                    + (player.online ? " (Online)" : " (Offline)");
-                return status;
-            },
-          formatRep: (rep) => {
-              return rep > 0 ? "green-bold" : "red-bold";
           }
       }
 }));
@@ -58,15 +45,26 @@ app.all("*", (request, response, next) => {
 });
 
 app.get('/', (request, response) => {
-    database.get("accounts", {email_verified: true, phone_verified: true}, {}, -1, (accounts) => {
-        database.get("requests", {}, {}, -1, (requests) => {
-            response.render("home", {
-                layout: "main.hbs",
-                referral_count: accounts.length,
-                usage_count: requests.length
-            });
-        }, (error) => { response.send("An error has occurred. Please send an email to contact@pmreferrals.ca."); });
-    }, (error) => { response.send("An error has occurred. Please send an email to contact@pmreferrals.ca."); });
+
+    database.get("codes", {visible: true}, {verified: -1}, -1, (codes) => {
+
+        var verified = codes.filter((c) => { return c.verified; });
+        var unverified = codes.filter((c) => { return !c.verified; });
+        verified.forEach(c => c.value = c.value.substring(0, 3));
+        unverified.forEach(c => c.value = c.value.substring(0, 3));
+
+        verified.sort((a, b) => { return Math.random() > 0.5 ? 1 : -1; });
+        unverified.sort((a, b) => { return Math.random() > 0.5 ? 1 : -1; });
+
+        response.render("home", {
+            layout: "main.hbs",
+            verified: utilities.chunkArray(verified, 3),
+            unverified: utilities.chunkArray(unverified, 3)
+        });
+    }, (error) => { 
+        response.send("An error has occurred. Please send an email to contact@pmreferrals.ca."); 
+        console.log(error);
+    });
     
 });
 
@@ -390,4 +388,5 @@ app.listen(port, function(err) {
     if (err) console.log("An error occurred.");
     console.log("Server started on port "+port);
     database.connect();
+    cleanup.register(function() { console.log("Terminating..."); database.disconnect(); });
 });

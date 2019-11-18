@@ -69,3 +69,5 @@ typings/
 *.bat
 
 ssl/
+
+.env.production
