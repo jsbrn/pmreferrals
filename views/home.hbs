@@ -1,39 +1,25 @@
 <div class = "container large-top-space">
     <div class = "row bottom-space">
-        <span class = "large title">Verified Referral Codes</span>
-        <br>
-        <i>
-            These codes have been verified as genuine by PMReferrals.ca.
-            <a target = "_blank" href = "/faq">Verify my referral code</a>
-        </i>
+        <span class = "large title">Submit your referral code:</span>
+        <input></input>
     </div>
-    {{#each verified as |row|}}
-        <div class = "row bottom-space">
-        {{#each row as |card|}}
-            <div class = "one-third column card bottom-space">
-                <span class = "large code">{{card.value}}<span class = "censored">###</span></span>
-                <span class = "left-space"></span>
-                <img title = "Verified by PMReferrals.ca" src = "/images/verified.png"></img>
-                <img title = "Copy referral code" src = "/images/copy.png"></img>
-            </div>
-        {{/each}}
+    {{#if redirect}}
+        <div class = "row bottom-space info-panel">
+            <center>
+                <b>Whoops! The code <span class = "code">{{bad_code}}</span> is no longer valid. It's been removed. Try again?</b>
+            </center>
         </div>
-    {{/each}}
-    <div class = "row bottom-space">
-        <span class = "large title">Other Referral Codes</span>
-        <br>
-        <i>
-            These codes have not been verified, but they haven't been reported to us as broken.
-            If you find one that doesn't work, please report it so it can be removed.
-        </i>
-    </div>
-    {{#each unverified as |row|}}
+    {{/if}}
+    {{#each codes as |row|}}
         <div class = "row bottom-space">
-        {{#each row as |card|}}
+        {{#each row as |code|}}
             <div class = "one-third column card bottom-space">
-                <span class = "large code">{{card.value}}<span class = "censored">###</span></span>
+                <span class = "large code">{{code.value}}<span class = "censored">###</span></span>
                 <span class = "left-space"></span>
-                <img title = "Copy referral code" src = "/images/copy.png"></img>
+                {{#if code.priority}}<img title = "Verified by PMReferrals.ca" src = "/images/verified.png"></img>{{/if}}
+                <a href = "/referral/{{code.url}}">
+                    <img title = "Copy referral code" src = "/images/copy.png"></img>
+                </a>
             </div>
         {{/each}}
         </div>

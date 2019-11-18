@@ -37,26 +37,44 @@ app.all("*", (request, response, next) => {
 
 app.get('/', (request, response) => {
 
-    database.get("codes", {visible: true}, {verified: -1}, -1, (codes) => {
+    database.get("codes", {}, {}, -1, (codes) => {
 
-        var verified = codes.filter((c) => { return c.verified; });
-        var unverified = codes.filter((c) => { return !c.verified; });
-        verified.forEach(c => c.value = c.value.substring(0, 3));
-        unverified.forEach(c => c.value = c.value.substring(0, 3));
-
-        verified.sort((a, b) => { return Math.random() > 0.5 ? 1 : -1; });
-        unverified.sort((a, b) => { return Math.random() > 0.5 ? 1 : -1; });
+        codes.forEach(c => c.value = c.value.substring(0, 3));
+        codes.sort((a, b) => { return Math.random() > (a.priority ? 0.9 : 0.5) ? 1 : -1; });
 
         response.render("home", {
             layout: "main.hbs",
-            verified: utilities.chunkArray(verified, 3),
-            unverified: utilities.chunkArray(unverified, 3)
+            codes: utilities.chunkArray(codes, 3),
+            redirect: request.query.redirect,
+            bad_code: request.query.bad_code
         });
     }, (error) => { 
         response.send("An error has occurred. Please send an email to contact@pmreferrals.ca."); 
         console.log(error);
     });
     
+});
+
+app.get('/referral/:url', (request, response, next) => {
+
+    database.get("codes", {url: request.params.url}, {}, 1, function (results) {
+        if (results.length == 0) { next(); return; } //404
+        var code = results[0].value;
+        validator.isValidReferral(code, (validator_results) => {
+            if (validator_results.error || !validator_results.valid) {
+                database.remove("codes", {url: request.params.url}, (results) => {
+                    response.redirect("/?redirect=true&bad_code="+code);
+                }, (err) => response.send(err));
+            } else {
+                response.render("referral", {
+                    layout: "main.hbs",
+                    title: request.params.code,
+                    code: results[0]
+                });
+            }
+        });
+    }, (err) => response.send(err));
+
 });
 
 app.get('/faq', (request, response) => {
@@ -66,23 +84,11 @@ app.get('/faq', (request, response) => {
     });
 });
 
-app.get('/success', (request, response) => {
-    response.render("success", {
-        layout: "main.hbs",
-        title: "Referral sent"
-    });
-});
-
-app.get('/api/verify/:code', (request, response) => {
-    validator.isValidReferral(request.params.code, (result) => {
-        response.json(result);
-    });
-});
-
 //catchall and 404
 app.get('*', (request, response) => {
     response.render("404", {
-        layout: "main"
+        layout: "main.hbs",
+        title: "Not found"
     });
 });
 

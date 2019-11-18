@@ -20,6 +20,15 @@ function isValidPhone(number) {
 }
 
 function isValidReferral(refcode, callback) {
+
+    //for when you don't want the real world result
+    if (process.env.MOCK_CODE_VALIDATION != "false") {
+        callback({
+            valid: false
+        });
+        return;
+    }
+
     // At request level
     const agent = new https.Agent({  
         rejectUnauthorized: false
