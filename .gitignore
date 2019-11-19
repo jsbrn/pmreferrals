@@ -66,4 +66,16 @@ typings/
 
 \.openode
 
+*.bat
+
+ssl/
+
+.env.production
+
+*.exe
+
+*.env
+
+\.openode
+
 ssl/

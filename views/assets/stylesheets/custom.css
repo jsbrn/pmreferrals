@@ -1,13 +1,5 @@
-.bg-img {
-	background: url("../images/bg.png") no-repeat center center fixed; 
-	-webkit-background-size: cover;
-	-moz-background-size: cover;
-	-o-background-size: cover;
-	background-size: cover;
-}
-
 .bg-color {
-	background: white;
+	background: #F4E8D9;
 }
 
 .top-space {
@@ -30,6 +22,39 @@
 	margin-right: 15px;
 }
 
+.card {
+	border-radius: 7px;
+	border: 2px solid #446a70;
+	-webkit-box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
+	-moz-box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
+	box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
+	padding-left: 10px;
+	padding-right: 10px;
+	background: rgb(236, 211, 180);
+	font-family: "Anton", sans-serif;
+}
+
+.title {
+	font-family: "Anton", sans-serif;
+}
+
+.code {
+	font-family: 'PT Mono', monospace;
+	font-weight: bold;
+}
+
+.censored {
+	color: #444;
+	background: rgb(129, 116, 100);
+	border-radius: 5px;
+	padding-left: 5px;
+	padding-right: 5px;
+	margin-left: 4px;
+	position: relative;
+	bottom: 4px;
+	font-size: 24px;
+}
+
 .panel, .info-panel, .success-panel, .failure-panel {
 	background: #fff;
 	padding: 10px;
@@ -40,6 +65,13 @@
 }
 
 .shadow {
+	-webkit-box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
+	-moz-box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
+	box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
+}
+
+input[type="text"] {
+	border: 1px solid black;
 	-webkit-box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
 	-moz-box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
 	box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
@@ -84,6 +116,8 @@ button, .button {
 
 button:hover, .button:hover {
 	border: 1px solid black;
+	background: rgb(236, 211, 180);
+	color: black;
 }
 
 .confirm {
@@ -93,6 +127,7 @@ button:hover, .button:hover {
 
 .confirm:hover {
 	background: rgb(15, 182, 15);
+	color: white;
 }
 
 .cancel {
@@ -113,6 +148,10 @@ button:hover, .button:hover {
 	color: green;
 }
 
+.red {
+	color: red;
+}
+
 .large {
 	font-size: 32px;
 	padding-top: 0px;
@@ -123,8 +162,8 @@ button:hover, .button:hover {
 	padding-top: 0px;
 }
 
-a {
-	color: orange;
+h1, h2, h3, h4, h5 {
+	font-family: "Anton", sans-serif;
 }
 
 table {
@@ -144,11 +183,7 @@ table {
 	left: 0;
 	bottom: 0;
 	width: 100%;
-	background-color: white;
 	padding-top: 10px;
 	padding-bottom: 5px;
 	padding-left: 10px;
-	-webkit-box-shadow: 3px 10px 33px 3px rgba(120,120,120,1);
-	-moz-box-shadow: 3px 10px 33px 3px rgba(120,120,120,1);
-	box-shadow: 3px 10px 33px 3px rgba(120,120,120,1);
 }

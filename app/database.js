@@ -1,15 +1,29 @@
 var MongoClient = require('mongodb').MongoClient;
 var database;
+var client;
 
 function connect() {
-    var url = "mongodb+srv://"
-        +process.env.MONGODB_USERNAME+":"
+    var srv = process.env.MONGODB_SRV_RECORD != "false";
+    var authSpecified = process.env.MONGODB_PASSWORD && process.env.MONGODB_USERNAME;
+    var url = "mongodb"
+        +(srv ? "+srv" : "")
+        +"://"
+        +process.env.MONGODB_USERNAME
+        +(authSpecified ? ":" : "")
         +process.env.MONGODB_PASSWORD
-        +"@"+process.env.MONGODB_URL+"/test?retryWrites=false";
-    MongoClient.connect(url, function(err, db) {
+        +(authSpecified ? "@" : "")
+        +process.env.MONGODB_URL+":"+process.env.MONGODB_PORT+"/test?retryWrites=false";
+    MongoClient.connect(url, function(err, cl) {
         if (err) { console.log("Error connecting to database at URL "+url+" : "+err.message); return; }
-        database = db.db(process.env.MONGODB_DATABASE);
-        console.log("Connected to database!");
+        database = cl.db(process.env.MONGODB_DATABASE);
+        client = cl;
+        console.log("Connected to database: "+url);
+    });
+}
+
+function disconnect() {
+    client.close(false, function() {
+        console.log("Database connection closed!");
     });
 }
 
@@ -67,6 +81,7 @@ function remove(collectionName, query, onSuccess, onFailure) {
 };
 
 module.exports.connect = connect;
+module.exports.disconnect = disconnect;
 module.exports.insert = insert;
 module.exports.get = get;
 module.exports.update = update;
