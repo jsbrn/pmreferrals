@@ -3,8 +3,11 @@ var database;
 var client;
 
 function connect() {
-    var authSpecified = process.env.MONGODB_PASSWORD && process.end.MONGODB_USERNAME;
-    var url = "mongodb://"
+    var srv = process.env.MONGODB_SRV_RECORD != "false";
+    var authSpecified = process.env.MONGODB_PASSWORD && process.env.MONGODB_USERNAME;
+    var url = "mongodb"
+        +(srv ? "+srv" : "")
+        +"://"
         +process.env.MONGODB_USERNAME
         +(authSpecified ? ":" : "")
         +process.env.MONGODB_PASSWORD

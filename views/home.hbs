@@ -1,15 +1,24 @@
 <div class = "container large-top-space">
-    <div class = "row bottom-space">
-        <span class = "large title">Submit your referral code:</span>
-        <input></input>
-    </div>
-    {{#if redirect}}
-        <div class = "row bottom-space info-panel">
+    {{#if successful_addition}}
+        <div class = "row bottom-space success-panel">
             <center>
-                <b>Whoops! The code <span class = "code">{{bad_code}}</span> is no longer valid. It's been removed. Try again?</b>
+                <b>Your code was successfully added! Keep an eye out for those referral bonuses.</b>
             </center>
         </div>
     {{/if}}
+    {{#if redirect}}
+        <div class = "row bottom-space info-panel">
+            <center>
+                <b>Whoops! The code <span class = "code">{{bad_code}}</span> is no longer valid. Don't worry, it's been removed. Try again?</b>
+            </center>
+        </div>
+    {{/if}}
+
+    <div class = "row bottom-space">
+        <span class = "large title">Get a referral code</span>
+        <br>
+        Click the copy button (<img style = "position: relative; top: 3px;" width = "14px" src = "/images/copy.png"></img>) next to the code you want.
+    </div>
     {{#each codes as |row|}}
         <div class = "row bottom-space">
         {{#each row as |code|}}

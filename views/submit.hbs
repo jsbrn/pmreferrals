@@ -1,0 +1,44 @@
+<div class = "container large-top-space">
+    {{#if invalid}}
+        <div class = "row bottom-space failure-panel">
+            <center>
+                <b><span class = "code">{{bad_code}}</span> is not a valid code. Try again!</b>
+            </center>
+        </div>
+    {{/if}}
+    {{#if exists}}
+        <div class = "row bottom-space info-panel">
+            <center>
+                <b>The code <span class = "code">{{bad_code}}</span> already exists in our database.</b>
+            </center>
+        </div>
+    {{/if}}
+    <div class = "row bottom-space">
+        <span class = "large title">Submit your Public Mobile referral code</span>
+    </div>
+    <div class = "row bottom-space">
+        <div class="row">
+            <div class = "one-half column">
+                <input class="u-full-width" type="text" placeholder="Enter your Public Mobile referral code" id="codeInput">
+            </div>
+        </div>
+        <div class = "row">
+            <button id = "submitButton" class = "confirm button">Submit</button>
+            <a class = "button" href = "/">Go home</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('submitButton').addEventListener("click", submit, false);
+    document.getElementById('codeInput').addEventListener("keyup", keyUp, false);
+    function keyUp(event) {
+        if (event.keyCode == 13) submit();
+    }
+    function submit() {
+        var code = $("#codeInput").val();
+        if (code.length <= 0) return;
+        window.location.replace("/submit?code="+code);
+    }
+</script>
+

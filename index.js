@@ -46,11 +46,12 @@ app.get('/', (request, response) => {
             layout: "main.hbs",
             codes: utilities.chunkArray(codes, 3),
             redirect: request.query.redirect,
-            bad_code: request.query.bad_code
+            bad_code: request.query.bad_code,
+            successful_addition: request.query.success
         });
     }, (error) => { 
-        response.send("An error has occurred. Please send an email to contact@pmreferrals.ca."); 
         console.log(error);
+        response.send(error);
     });
     
 });
@@ -75,6 +76,42 @@ app.get('/referral/:url', (request, response, next) => {
         });
     }, (err) => response.send(err));
 
+});
+
+app.get('/submit', (request, response) => {
+    var code = request.query.code;
+    if (code) {
+        validator.isValidReferral(code, (validator_results) => {
+            if (validator_results.error || !validator_results.valid) {
+                response.redirect("/submit?invalid=true&bad_code="+code);
+                return;
+            }
+            database.get("codes", {value: code}, {}, 1, (results) => {
+                if (results.length > 0) {
+                    response.redirect("/submit?exists=true&bad_code="+code);
+                } else {
+                    database.insert("codes", [
+                        {
+                            value: code, 
+                            priority: false, 
+                            url:  Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+                        }
+                    ], (results) => {
+                        response.redirect("/?success=true");
+                    }, (err) => response.send(err));
+                }
+            }, (err) => response.send(err));
+        });
+    } else {
+        response.render("submit", {
+            layout: "main.hbs",
+            title: "Submit your code",
+            invalid: request.query.invalid,
+            exists: request.query.exists,
+            bad_code: request.query.bad_code
+        });
+    }
+    
 });
 
 app.get('/faq', (request, response) => {
