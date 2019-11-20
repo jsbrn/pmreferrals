@@ -19,26 +19,17 @@ function isValidPhone(number) {
     return n_patt.test(number) && number.length == 10;
 }
 
-function isValidReferral(refcode, callback) {
-
-    //for when you don't want the real world result
-    if (process.env.MOCK_CODE_VALIDATION != "false") {
-        callback({
-            valid: false
-        });
-        return;
-    }
-
-    // At request level
+function findOnPage(needle, url, callback) {
+    
     const agent = new https.Agent({  
         rejectUnauthorized: false
     });
     
-    axios.get('https://activate.publicmobile.ca/?raf=' + refcode, { httpsAgent: agent })
+    axios.get(url, { httpsAgent: agent })
         .then(function (axios_response) {
             //if it has the green checkmark it's a valid code
             callback({
-                valid: axios_response.data.includes("ok_16x16")
+                valid: axios_response.data.includes(needle)
             })
         })
         .catch(function (err) {
@@ -46,8 +37,9 @@ function isValidReferral(refcode, callback) {
                 error: err
             });
         });
+        
 }
 
 module.exports.isValidEmail = isValidEmail;
 module.exports.isValidPhone = isValidPhone;
-module.exports.isValidReferral = isValidReferral;
+module.exports.findOnPage = findOnPage;

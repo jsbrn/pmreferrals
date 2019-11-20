@@ -1,4 +1,5 @@
 <div class = "container large-top-space">
+
     {{#if successful_addition}}
         <div class = "row bottom-space success-panel">
             <center>
@@ -15,23 +16,59 @@
     {{/if}}
 
     <div class = "row bottom-space">
-        <span class = "large title">Get a referral code</span>
-        <br>
-        Click the copy button (<img style = "position: relative; top: 3px;" width = "14px" src = "/images/copy.png"></img>) next to the code you want.
+        <span class = "large title">Get a referral code for your next phone plan</span>
     </div>
-    {{#each codes as |row|}}
-        <div class = "row bottom-space">
-        {{#each row as |code|}}
-            <div class = "one-third column card bottom-space">
-                <span class = "large code">{{code.value}}<span class = "censored">###</span></span>
-                <span class = "left-space"></span>
-                {{#if code.priority}}<img title = "Verified by PMReferrals.ca" src = "/images/verified.png"></img>{{/if}}
-                <a href = "/referral/{{code.url}}">
-                    <img title = "Copy referral code" src = "/images/copy.png"></img>
-                </a>
+    <div class = "row bottom-space">
+        Many cellular providers offer signup rewards if you provide a code during registration. 
+        Choose a carrier, then click the referral code you want to use. If you already have a plan and want to share your referral code, you can do that instead.
+    </div>
+    <div class = "row bottom-space">
+        <a href = "/submit?carrier={{carrier.id}}" class = "confirm button">Submit your code</a>
+    </div>
+    <div class = "row bottom-space">
+        <div class = "one-half column">
+            <label for="carrierChooser">Or choose a carrier</label>
+            <select length = "4444" id = "carrierChooser" class = "u-full-width">
+                {{#each carrier_options}}
+                    <option value = "{{this.id}}" {{#if this.selected}}selected{{/if}}>{{this.name}}</option>
+                {{/each}}
+            </select>
+        </div>
+    </div>
+    {{#if empty}}
+        <span>No results found! <img style = "position: relative; top: 4px;" src = "/images/downvote.png"></img></span>
+    {{else}}
+        {{#each codes as |row|}}
+            <div class = "row">
+            {{#each row as |code|}}
+                <div id="{{code.url}}"class = "one-third column card noselect clickable bottom-space">
+                    <img class = "carrier-icon right-space" title = "{{../../carrier.name}} referral" src = "/images/logos/{{code.carrier}}.png"></img>
+                    <span class = "large code">{{code.value}}<span class = "censored">###</span></span>
+                </div>
+            {{/each}}
             </div>
         {{/each}}
-        </div>
-    {{/each}}
+    {{/if}}
 </div>
 
+<script>
+
+    document.getElementById('carrierChooser').addEventListener("change", changeCarrier, true);
+
+    var cards = document.querySelectorAll('.card');
+    cards.forEach(function(card) {
+        card.addEventListener('click', function(event) {
+            window.location.replace("/referral/"+card.id);
+        }, true);
+    });
+
+    function changeCarrier() {
+        var element = document.getElementById("carrierChooser");
+        var selectedValue = element.options[element.selectedIndex].value;
+        window.location.replace("/?carrier="+selectedValue);
+    }
+
+    function clickOnReferral() {
+
+    }
+</script>

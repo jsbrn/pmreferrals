@@ -35,23 +35,30 @@ app.all("*", (request, response, next) => {
     next();
 });
 
-app.get('/', (request, response) => {
+app.get('/', (request, response, next) => {
 
-    database.get("codes", {}, {}, -1, (codes) => {
+    database.get("carriers", {}, {}, -1, (carriers) => {
 
-        codes.forEach(c => c.value = c.value.substring(0, 3));
-        codes.sort((a, b) => { return Math.random() > (a.priority ? 0.9 : 0.5) ? 1 : -1; });
+        var selectedCarriers = carriers.filter(c => c.id == (request.query.carrier ? request.query.carrier : "pm"));
+        if (selectedCarriers.length == 0) { next(); return; }
+        database.get("codes", {carrier: selectedCarriers[0].id}, {}, -1, (codes) => {
+    
+            codes.forEach(c => c.value = c.value.substring(0, 3));
+            codes.sort((a, b) => { return Math.random() > (a.priority ? 0.9 : 0.5) ? 1 : -1; });
 
-        response.render("home", {
-            layout: "main.hbs",
-            codes: utilities.chunkArray(codes, 3),
-            redirect: request.query.redirect,
-            bad_code: request.query.bad_code,
-            successful_addition: request.query.success
+            response.render("home", {
+                layout: "main.hbs",
+                codes: utilities.chunkArray(codes, 3),
+                redirect: request.query.redirect,
+                bad_code: request.query.bad_code,
+                successful_addition: request.query.success,
+                carrier: selectedCarriers[0],
+                carrier_options: carriers.map((elem) => { elem.selected = elem.id == selectedCarriers[0].id; return elem; }),
+                empty: codes.length == 0
+            });
+
         });
-    }, (error) => { 
-        console.log(error);
-        response.send(error);
+
     });
     
 });
@@ -60,55 +67,72 @@ app.get('/referral/:url', (request, response, next) => {
 
     database.get("codes", {url: request.params.url}, {}, 1, function (results) {
         if (results.length == 0) { next(); return; } //404
-        var code = results[0].value;
-        validator.isValidReferral(code, (validator_results) => {
-            if (validator_results.error || !validator_results.valid) {
-                database.remove("codes", {url: request.params.url}, (results) => {
-                    response.redirect("/?redirect=true&bad_code="+code);
-                }, (err) => response.send(err));
-            } else {
-                response.render("referral", {
-                    layout: "main.hbs",
-                    title: request.params.code,
-                    code: results[0]
-                });
-            }
+        var code = results[0];
+        database.get("carriers", {id: code.carrier}, {}, -1, (carriers) => {
+            if (carriers.length == 0) { next(); return; }
+            validator.findOnPage(carriers[0].activation_needle, carriers[0].activation_url.replace("{{code}}", code.value), (validator_results) => {
+                if (validator_results.error || !validator_results.valid) {
+                    database.remove("codes", {url: request.params.url, carrier: code.carrier}, (results) => {
+                        response.redirect("/?carrier="+code.carrier+"&redirect=true&bad_code="+code.value);
+                    }, (err) => response.send(err));
+                } else {
+                    response.render("referral", {
+                        layout: "main.hbs",
+                        title: request.params.code,
+                        url: carriers[0].activation_url.replace("{{code}}", results[0].value),
+                        code: results[0]
+                    });
+                }
+            });
         });
     }, (err) => response.send(err));
 
 });
 
-app.get('/submit', (request, response) => {
-    var code = request.query.code;
-    if (code) {
-        validator.isValidReferral(code, (validator_results) => {
-            if (validator_results.error || !validator_results.valid) {
-                response.redirect("/submit?invalid=true&bad_code="+code);
-                return;
-            }
-            database.get("codes", {value: code}, {}, 1, (results) => {
-                if (results.length > 0) {
-                    response.redirect("/submit?exists=true&bad_code="+code);
-                } else {
-                    database.insert("codes", [
-                        {
-                            value: code, 
-                            priority: false, 
-                            url:  Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-                        }
-                    ], (results) => {
-                        response.redirect("/?success=true");
-                    }, (err) => response.send(err));
+app.get('/submit', (request, response, next) => {
+    if (request.query.code && request.query.carrier) {
+        database.get("carriers", {id: request.query.carrier}, {}, -1, (carriers) => {
+            if (carriers.length == 0) { next(); return; }
+            var selectedCarrier = carriers[0];
+            validator.findOnPage(selectedCarrier.activation_needle, selectedCarrier.activation_url.replace("{{code}}", request.query.code), (validator_results) => {
+                if (validator_results.error || !validator_results.valid) {
+                    response.redirect("/submit?invalid=true&bad_code="+request.query.code+"&carrier="+selectedCarrier.id);
+                    return;
                 }
-            }, (err) => response.send(err));
+                database.get("codes", {value: request.query.code, carrier: selectedCarrier.id}, {}, 1, (results) => {
+                    if (results.length > 0) {
+                        response.redirect("/submit?exists=true&bad_code="+request.query.code+"&carrier="+selectedCarrier.id);
+                    } else {
+                        database.insert("codes", [
+                            {
+                                value: request.query.code, 
+                                priority: false, 
+                                url:  Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
+                                carrier: selectedCarrier.id
+                            }
+                        ], (results) => {
+                            mailer.sendRaw(
+                                process.env.ADMIN_EMAIL, 
+                                "New PMReferral code received",
+                                request.query.code+" ("+selectedCarrier.name+")",
+                                (info) => {
+                                    response.redirect("/?success=true&carrier="+selectedCarrier.id);
+                                });
+                        }, (err) => response.send(err));
+                    }
+                }, (err) => response.send(err));
+            });
         });
     } else {
-        response.render("submit", {
-            layout: "main.hbs",
-            title: "Submit your code",
-            invalid: request.query.invalid,
-            exists: request.query.exists,
-            bad_code: request.query.bad_code
+        database.get("carriers", {}, {}, -1, (carriers) => {
+            response.render("submit", {
+                layout: "main.hbs",
+                title: "Submit your code",
+                invalid: request.query.invalid,
+                exists: request.query.exists,
+                bad_code: request.query.bad_code,
+                carrier_options: carriers.map((elem) => { elem.selected = elem.id == request.query.carrier; return elem; })
+            });
         });
     }
     

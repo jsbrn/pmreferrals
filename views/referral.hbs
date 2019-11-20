@@ -1,22 +1,15 @@
 <div class = "container large-top-space">
     <div class = "row bottom-space">
         <span class = "large title">Good choice!</span>
-        <br>
-        <i>
-            Now just copy the code, or click the button to visit the activation page.
-        </i>
     </div>
     <div class = "row bottom-space">
-        <div class = "card bottom-space">
-            <span class = "large code">{{code.value}}</span>
-            <span class = "left-space"></span>
-            {{#if code.priority}}<img title = "Verified by PMReferrals.ca" src = "/images/verified.png"></img>{{/if}}
-            <br>
-            <a target = "_blank" href = "https://activate.publicmobile.ca/?raf={{code.value}}" class = "confirm button">Activate!</a>
-        </div>
+        Now just copy the code, or click the link to open the SIM activation page.
     </div>
     <div class = "row bottom-space">
-        <a class = "button" href = "/">Go back</a>
+        <span class = "large code censored right-space white">{{code.value}}</span>
+        <a title = "Open activation window" target = "_blank" href = "{{url}}"><img src = "/images/external.png"></img></a>
+    </div>
+    <div class = "row bottom-space">
+        <a class = "button" href = "/?carrier={{code.carrier}}">Go back</a>
     </div>
 </div>
-
