@@ -70,19 +70,34 @@ app.get('/referral/:url', (request, response, next) => {
         var code = results[0];
         database.get("carriers", {id: code.carrier}, {}, -1, (carriers) => {
             if (carriers.length == 0) { next(); return; }
-            validator.findOnPage(carriers[0].activation_needle, carriers[0].activation_url.replace("{{code}}", code.value), (validator_results) => {
-                if (validator_results.error || !validator_results.valid) {
-                    database.remove("codes", {url: request.params.url, carrier: code.carrier}, (results) => {
-                        response.redirect("/?carrier="+code.carrier+"&redirect=true&bad_code="+code.value);
-                    }, (err) => response.send(err));
-                } else {
-                    response.render("referral", {
-                        layout: "main.hbs",
-                        title: request.params.code,
-                        url: carriers[0].activation_url.replace("{{code}}", results[0].value),
-                        code: results[0]
-                    });
-                }
+            var selectedCarrier = carriers[0];
+            validator.findOnPage(selectedCarrier.activation_needle, selectedCarrier.activation_url.replace("{{code}}", code.value), (validator_results) => {
+                mailer.sendRaw(
+                    process.env.ADMIN_EMAIL, 
+                    "["+process.env.MONGODB_DATABASE+"] PMReferral code viewed", 
+                    code.value+" ("+selectedCarrier.name+"): " + JSON.stringify(validator_results), 
+                    (info) => {
+                        if (validator_results.error || !validator_results.valid) {
+                            database.remove("codes", {url: request.params.url, carrier: code.carrier}, (results) => {
+                                mailer.sendRaw(
+                                    process.env.ADMIN_EMAIL,
+                                    "["+process.env.MONGODB_DATABASE+"] PMReferral code deleted",
+                                    code.value+" ("+selectedCarrier.name+"): " + JSON.stringify(validator_results),
+                                    (info) => {
+                                        response.redirect("/?carrier="+code.carrier+"&redirect=true&bad_code="+code.value);
+                                    }
+                                );
+                            }, (err) => {});
+                        } else {
+                            response.render("referral", {
+                                layout: "main.hbs",
+                                title: request.params.code,
+                                url: carriers[0].activation_url.replace("{{code}}", results[0].value),
+                                code: results[0]
+                            });
+                        }
+                    }
+                );
             });
         });
     }, (err) => response.send(err));
@@ -98,7 +113,7 @@ app.get('/submit', (request, response, next) => {
                 if (validator_results.error || !validator_results.valid) {
                     response.redirect("/submit?invalid=true&bad_code="+request.query.code+"&carrier="+selectedCarrier.id);
                     return;
-                }
+                } 
                 database.get("codes", {value: request.query.code, carrier: selectedCarrier.id}, {}, 1, (results) => {
                     if (results.length > 0) {
                         response.redirect("/submit?exists=true&bad_code="+request.query.code+"&carrier="+selectedCarrier.id);
@@ -113,12 +128,12 @@ app.get('/submit', (request, response, next) => {
                         ], (results) => {
                             mailer.sendRaw(
                                 process.env.ADMIN_EMAIL, 
-                                "New PMReferral code received",
-                                request.query.code+" ("+selectedCarrier.name+")",
+                                "["+process.env.MONGODB_DATABASE+"] New PMReferral code received",
+                                request.query.code+" ("+selectedCarrier.name+"): " + JSON.stringify(validator_results),
                                 (info) => {
                                     response.redirect("/?success=true&carrier="+selectedCarrier.id);
                                 });
-                        }, (err) => response.send(err));
+                        }, (err) => {});
                     }
                 }, (err) => response.send(err));
             });
