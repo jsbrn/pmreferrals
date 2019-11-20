@@ -22,6 +22,20 @@
 	margin-right: 15px;
 }
 
+.noselect {
+	-webkit-touch-callout: none; /* iOS Safari */
+		-webkit-user-select: none; /* Safari */
+		-khtml-user-select: none; /* Konqueror HTML */
+			-moz-user-select: none; /* Old versions of Firefox */
+			-ms-user-select: none; /* Internet Explorer/Edge */
+				user-select: none; /* Non-prefixed version, currently
+									supported by Chrome, Opera and Firefox */
+}
+
+.clickable {
+	cursor: pointer;
+}
+
 .card {
 	border-radius: 7px;
 	border: 2px solid #446a70;
@@ -32,6 +46,10 @@
 	padding-right: 10px;
 	background: rgb(236, 211, 180);
 	font-family: "Anton", sans-serif;
+}
+
+.card:hover {
+	background: rgb(235, 199, 155);
 }
 
 .title {
@@ -70,7 +88,7 @@
 	box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
 }
 
-input[type="text"] {
+input[type="text"], select {
 	border: 1px solid black;
 	-webkit-box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
 	-moz-box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
@@ -100,6 +118,13 @@ input[type="text"] {
 	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
 	margin-right: 10px;
 	font-family: Arial, Helvetica, sans-serif;
+}
+
+.carrier-icon {
+	border-radius: 16px;
+	border: 2px solid gray;
+	position: relative;
+	top:2px;
 }
 
 .navlink:hover {
@@ -141,7 +166,6 @@ button:hover, .button:hover {
 
 .white {
 	color: white;
-	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.8);
 }
 
 .green {
