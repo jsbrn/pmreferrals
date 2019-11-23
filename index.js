@@ -65,39 +65,33 @@ app.get('/', (request, response, next) => {
 
 app.get('/referral/:url', (request, response, next) => {
 
-    database.get("codes", {url: request.params.url}, {}, 1, function (results) {
-        if (results.length == 0) { next(); return; } //404
-        var code = results[0];
+    database.get("codes", {url: request.params.url}, {}, 1, function (matching_codes) {
+        if (matching_codes.length == 0) { next(); return; } //404
+        var code = matching_codes[0];
         database.get("carriers", {id: code.carrier}, {}, -1, (carriers) => {
             if (carriers.length == 0) { next(); return; }
             var selectedCarrier = carriers[0];
-            validator.findOnPage(selectedCarrier.activation_needle, selectedCarrier.activation_url.replace("{{code}}", code.value), (validator_results) => {
-                mailer.sendRaw(
-                    process.env.ADMIN_EMAIL, 
-                    "["+process.env.MONGODB_DATABASE+"] PMReferral code viewed", 
-                    code.value+" ("+selectedCarrier.name+"): " + JSON.stringify(validator_results), 
-                    (info) => {
-                        if (validator_results.error || !validator_results.valid) {
-                            database.remove("codes", {url: request.params.url, carrier: code.carrier}, (results) => {
-                                mailer.sendRaw(
-                                    process.env.ADMIN_EMAIL,
-                                    "["+process.env.MONGODB_DATABASE+"] PMReferral code deleted",
-                                    code.value+" ("+selectedCarrier.name+"): " + JSON.stringify(validator_results),
-                                    (info) => {
-                                        response.redirect("/?carrier="+code.carrier+"&redirect=true&bad_code="+code.value);
-                                    }
-                                );
-                            }, (err) => {});
-                        } else {
-                            response.render("referral", {
-                                layout: "main.hbs",
-                                title: request.params.code,
-                                url: carriers[0].activation_url.replace("{{code}}", results[0].value),
-                                code: results[0]
-                            });
-                        }
-                    }
-                );
+            validator.findOnPage(selectedCarrier.activation_needle, selectedCarrier.activation_url.replace("{{code}}", code.value), (validator_results) => {  
+                if (validator_results.error || !validator_results.valid) {
+                    database.remove("codes", {url: request.params.url, carrier: code.carrier}, (deleted_codes) => {
+                        database.insert("logs", [
+                            {event_type: "delete", code: code.value, date: new Date()}
+                        ], (inserted_logs) => {
+                            response.redirect("/?carrier="+code.carrier+"&redirect=true&bad_code="+code.value);
+                        });
+                    }, (err) => {});
+                } else {
+                    database.insert("logs", [
+                        {event_type: "view", code: code.value, date: new Date()}
+                    ], (inserted_logs) => {
+                        response.render("referral", {
+                            layout: "main.hbs",
+                            title: request.params.code,
+                            url: carriers[0].activation_url.replace("{{code}}", code.value),
+                            code: code
+                        });
+                    });
+                }
             });
         });
     }, (err) => response.send(err));
@@ -125,14 +119,12 @@ app.get('/submit', (request, response, next) => {
                                 url:  Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
                                 carrier: selectedCarrier.id
                             }
-                        ], (results) => {
-                            mailer.sendRaw(
-                                process.env.ADMIN_EMAIL, 
-                                "["+process.env.MONGODB_DATABASE+"] New PMReferral code received",
-                                request.query.code+" ("+selectedCarrier.name+"): " + JSON.stringify(validator_results),
-                                (info) => {
-                                    response.redirect("/?success=true&carrier="+selectedCarrier.id);
-                                });
+                        ], (inserted_codes) => {
+                            database.insert("logs", [
+                                {event_type: "submit", code: request.query.code, date: new Date()}
+                            ], (results) => {
+                                response.redirect("/?success=true&carrier="+selectedCarrier.id);
+                            });
                         }, (err) => {});
                     }
                 }, (err) => response.send(err));
