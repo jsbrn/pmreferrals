@@ -10,6 +10,7 @@ const cleanup = require('./app/cleanup.js');
 const utilities = require('./app/utilities.js');
 const mailer = require('./app/mailer.js');
 const validator = require('./app/validator.js');
+const moment = require('moment');
 
 /*Set the Handlebars options, including the Helpers*/
 app.engine('.hbs', exphbs({
@@ -29,10 +30,18 @@ app.use('/scripts',express.static(path.join(__dirname, 'views/assets/scripts')))
 
 /*HTTP REQUEST HANDLERS*/
 
-//post all requests to the console
+//post all requests to the console or redirect if maintenance
 app.all("*", (request, response, next) => {
     console.log(request.method, request.url, request.params, request.query, request.body);
-    next();
+    if (process.env.MAINTENANCE=="true") {
+        response.render("maintenance", {
+            layout: "noheader.hbs",
+            message: process.env.MESSAGE,
+            submessage: process.env.SUBMESSAGE
+        })
+    } else {
+        next();
+    }
 });
 
 app.get('/', (request, response, next) => {
@@ -149,6 +158,74 @@ app.get('/faq', (request, response) => {
     response.render("faq", {
         layout: "main.hbs",
         title: "FAQ"
+    });
+});
+
+app.get('/stats', (request, response) => {
+    database.get('logs', {}, {}, -1, (logs) => {
+
+        var totalViewCount = logs.filter((l) => { 
+            return l.event_type === "view" 
+                && l.date < moment().subtract(1, 'hour');
+        }).length;
+        var weeklyViewCount = logs.filter((l) => { 
+            return l.event_type === "view" 
+                && l.date < moment().subtract(1, 'hour')
+                && l.date > moment().subtract(7, 'days');
+        }).length;
+        var dailyViewCount = logs.filter((l) => { 
+            return l.event_type === "view" 
+                && l.date < moment().subtract(1, 'hour')
+                && l.date > moment().subtract(1, 'day');
+        }).length;
+
+        var viewCounts = new Array();
+        var submissionCounts = new Array();
+        var dayLabels = new Array();
+        
+        var days = request.query.days ? parseInt(request.query.days) : 14;
+
+        if (days > 180) {
+            response.redirect("/statistics?days=180");
+            return;
+        }
+
+        for (var d = moment('2019-11-18'); d.isBefore(moment()); d.add(1, 'day')) {
+            viewCounts.push(
+                logs.filter((l) => {
+                    return l.event_type === "view"
+                    && l.date < moment().subtract(1, 'hour')
+                    && d.isSame(l.date, 'day')
+                }).length
+            );
+            submissionCounts.push(
+                logs.filter((l) => {
+                    return l.event_type === "submit"
+                    && l.date < moment().subtract(1, 'hour') 
+                    && d.isSame(l.date, 'day')
+                }).length
+            );
+            dayLabels.push(
+                d.format("YYYY-MM-DD")
+            );
+        }
+
+        response.render("stats", {
+            layout: "main.hbs",
+            title: "Statistics",
+            days: days,
+            totalViewCount: totalViewCount,
+            weeklyViewCount: weeklyViewCount,
+            dailyViewCount: dailyViewCount,
+            dailyViewsHot: dailyViewCount > 20,
+            weeklyViewsHot: weeklyViewCount > 200,
+            chartData: {
+                "labels": dayLabels,
+                "views": viewCounts,
+                "submissions": submissionCounts
+            }
+        });
+
     });
 });
 

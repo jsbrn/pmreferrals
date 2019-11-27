@@ -45,7 +45,7 @@
         var code = $("#codeInput").val();
         if (code.length <= 0) return;
         document.getElementById('submitButton').innerHTML = "Please wait...";
-        $('#submitButton').attr('href', '#');
+        document.getElementById('submitButton').href = "";
         var element = document.getElementById("carrierChooser");
         var selectedValue = element.options[element.selectedIndex].value;
         window.location.replace("/submit?code="+code+"&carrier="+selectedValue);

@@ -11,7 +11,6 @@
 		<link rel="stylesheet" href="/css/normalize.css">
 		<link rel="stylesheet" href="/css/skeleton.css">
 		<link rel="stylesheet" href="/css/custom.css">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 	</head>
 
 	<body class = "bg-color">
@@ -19,9 +18,22 @@
 			<div class = "row top-space">
 				<div class = "two-thirds column">
 					<a title = "Go to home page" href = "/"><img src = "/images/favicon.png"></img></a>
+					<span style = "position: relative; bottom: 10px; text-decoration: none;">
+						<a href = "/" class = "left-space pmblue title">Get a referral</a>
+						<a href = "/stats" class = "left-space pmblue title">Statistics</a>
+						<a href = "/faq" class = "left-space pmblue title">FAQ</a>
+					</span>
 				</div>
 			</div>
 		</div>
+		<div id = "nojs" class = "container top-space failure-panel">
+			<center>
+				<b>This website requires Javascript. Please make sure it's enabled!</b>
+			</center>
+		</div>
+		<script>
+			document.getElementById('nojs').style.display = "none";
+		</script>
 		{{{body}}}
 		<div class = "container large-top-space bottom-space">
 			<i>
