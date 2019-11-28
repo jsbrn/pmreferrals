@@ -42,7 +42,7 @@
         if (event.keyCode == 13) submit();
     }
     function submit() {
-        var code = $("#codeInput").val();
+        var code = document.getElementById('codeInput').value;
         if (code.length <= 0) return;
         document.getElementById('submitButton').innerHTML = "Please wait...";
         document.getElementById('submitButton').href = "";
