@@ -1,0 +1,61 @@
+<div class = "container large-top-space">
+    <div class = "row bottom-space">
+        <div class = "one-third column">
+            <span class = "xlarge title pmblue">{{dailyViewCount}}</span>
+            {{#if dailyViewsHot}}<img src = "/images/fire.png"></img>{{/if}}
+            <br>
+            <b>codes viewed in the last 24 hours</b>
+        </div>
+        <div class = "one-third column">
+            <span class = "xlarge title pmblue">{{weeklyViewCount}}</span>
+            {{#if weeklyViewsHot}}<img src = "/images/fire.png"></img>{{/if}}
+            <br>
+            <b>codes viewed in the last 7 days</b>
+        </div>
+        <div class = "one-third column">
+            <span class = "xlarge title pmblue">{{totalViewCount}}</span>
+            <br>
+            <b>codes viewed since inception</b>
+        </div>
+    </div>
+    <div class = "row bottom-space">
+        <span class = "large title">All Time</span>
+    </div>
+    <div class = "row bottom-space">
+        <div id = "chart" class = "panel"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+    var options = {
+        chart: {
+            type: 'line',
+            toolbar: {
+                show: true
+            },
+            zoom: {
+                enabled: true
+            }
+        },
+        series: [
+            {
+                name: 'Codes viewed',
+                data: [{{#each chartData.views}}{{this}},{{/each}}]
+            },
+            {
+                name: 'Submissions',
+                data: [{{#each chartData.submissions}}{{this}},{{/each}}]
+            },
+        ],
+        colors: ['#034045', '#00ff00'],
+        xaxis: {
+            type: "datetime",
+            categories: [{{#each chartData.labels}}"{{this}}",{{/each}}],
+        }
+    }
+
+        var chart = new ApexCharts(document.querySelector("#chart"), options);
+
+        chart.render();
+</script>

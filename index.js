@@ -10,6 +10,7 @@ const cleanup = require('./app/cleanup.js');
 const utilities = require('./app/utilities.js');
 const mailer = require('./app/mailer.js');
 const validator = require('./app/validator.js');
+const moment = require('moment');
 
 /*Set the Handlebars options, including the Helpers*/
 app.engine('.hbs', exphbs({
@@ -29,10 +30,18 @@ app.use('/scripts',express.static(path.join(__dirname, 'views/assets/scripts')))
 
 /*HTTP REQUEST HANDLERS*/
 
-//post all requests to the console
+//post all requests to the console or redirect if maintenance
 app.all("*", (request, response, next) => {
     console.log(request.method, request.url, request.params, request.query, request.body);
-    next();
+    if (process.env.MAINTENANCE=="true") {
+        response.render("maintenance", {
+            layout: "noheader.hbs",
+            message: process.env.MESSAGE,
+            submessage: process.env.SUBMESSAGE
+        })
+    } else {
+        next();
+    }
 });
 
 app.get('/', (request, response, next) => {
@@ -65,39 +74,33 @@ app.get('/', (request, response, next) => {
 
 app.get('/referral/:url', (request, response, next) => {
 
-    database.get("codes", {url: request.params.url}, {}, 1, function (results) {
-        if (results.length == 0) { next(); return; } //404
-        var code = results[0];
+    database.get("codes", {url: request.params.url}, {}, 1, function (matching_codes) {
+        if (matching_codes.length == 0) { next(); return; } //404
+        var code = matching_codes[0];
         database.get("carriers", {id: code.carrier}, {}, -1, (carriers) => {
             if (carriers.length == 0) { next(); return; }
             var selectedCarrier = carriers[0];
-            validator.findOnPage(selectedCarrier.activation_needle, selectedCarrier.activation_url.replace("{{code}}", code.value), (validator_results) => {
-                mailer.sendRaw(
-                    process.env.ADMIN_EMAIL, 
-                    "["+process.env.MONGODB_DATABASE+"] PMReferral code viewed", 
-                    code.value+" ("+selectedCarrier.name+"): " + JSON.stringify(validator_results), 
-                    (info) => {
-                        if (validator_results.error || !validator_results.valid) {
-                            database.remove("codes", {url: request.params.url, carrier: code.carrier}, (results) => {
-                                mailer.sendRaw(
-                                    process.env.ADMIN_EMAIL,
-                                    "["+process.env.MONGODB_DATABASE+"] PMReferral code deleted",
-                                    code.value+" ("+selectedCarrier.name+"): " + JSON.stringify(validator_results),
-                                    (info) => {
-                                        response.redirect("/?carrier="+code.carrier+"&redirect=true&bad_code="+code.value);
-                                    }
-                                );
-                            }, (err) => {});
-                        } else {
-                            response.render("referral", {
-                                layout: "main.hbs",
-                                title: request.params.code,
-                                url: carriers[0].activation_url.replace("{{code}}", results[0].value),
-                                code: results[0]
-                            });
-                        }
-                    }
-                );
+            validator.findOnPage(selectedCarrier.activation_needle, selectedCarrier.activation_url.replace("{{code}}", code.value), (validator_results) => {  
+                if (validator_results.error || !validator_results.valid) {
+                    database.remove("codes", {url: request.params.url, carrier: code.carrier}, (deleted_codes) => {
+                        database.insert("logs", [
+                            {event_type: "delete", code: code.value, date: new Date()}
+                        ], (inserted_logs) => {
+                            response.redirect("/?carrier="+code.carrier+"&redirect=true&bad_code="+code.value);
+                        });
+                    }, (err) => {});
+                } else {
+                    database.insert("logs", [
+                        {event_type: "view", code: code.value, date: new Date()}
+                    ], (inserted_logs) => {
+                        response.render("referral", {
+                            layout: "main.hbs",
+                            title: request.params.code,
+                            url: carriers[0].activation_url.replace("{{code}}", code.value),
+                            code: code
+                        });
+                    });
+                }
             });
         });
     }, (err) => response.send(err));
@@ -125,14 +128,12 @@ app.get('/submit', (request, response, next) => {
                                 url:  Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
                                 carrier: selectedCarrier.id
                             }
-                        ], (results) => {
-                            mailer.sendRaw(
-                                process.env.ADMIN_EMAIL, 
-                                "["+process.env.MONGODB_DATABASE+"] New PMReferral code received",
-                                request.query.code+" ("+selectedCarrier.name+"): " + JSON.stringify(validator_results),
-                                (info) => {
-                                    response.redirect("/?success=true&carrier="+selectedCarrier.id);
-                                });
+                        ], (inserted_codes) => {
+                            database.insert("logs", [
+                                {event_type: "submit", code: request.query.code, date: new Date()}
+                            ], (results) => {
+                                response.redirect("/?success=true&carrier="+selectedCarrier.id);
+                            });
                         }, (err) => {});
                     }
                 }, (err) => response.send(err));
@@ -157,6 +158,74 @@ app.get('/faq', (request, response) => {
     response.render("faq", {
         layout: "main.hbs",
         title: "FAQ"
+    });
+});
+
+app.get('/stats', (request, response) => {
+    database.get('logs', {}, {}, -1, (logs) => {
+
+        var totalViewCount = logs.filter((l) => { 
+            return l.event_type === "view" 
+                && l.date < moment().subtract(1, 'hour');
+        }).length;
+        var weeklyViewCount = logs.filter((l) => { 
+            return l.event_type === "view" 
+                && l.date < moment().subtract(1, 'hour')
+                && l.date > moment().subtract(7, 'days');
+        }).length;
+        var dailyViewCount = logs.filter((l) => { 
+            return l.event_type === "view" 
+                && l.date < moment().subtract(1, 'hour')
+                && l.date > moment().subtract(1, 'day');
+        }).length;
+
+        var viewCounts = new Array();
+        var submissionCounts = new Array();
+        var dayLabels = new Array();
+        
+        var days = request.query.days ? parseInt(request.query.days) : 14;
+
+        if (days > 180) {
+            response.redirect("/statistics?days=180");
+            return;
+        }
+
+        for (var d = moment('2019-11-18'); d.isBefore(moment()); d.add(1, 'day')) {
+            viewCounts.push(
+                logs.filter((l) => {
+                    return l.event_type === "view"
+                    && l.date < moment().subtract(1, 'hour')
+                    && d.isSame(l.date, 'day')
+                }).length
+            );
+            submissionCounts.push(
+                logs.filter((l) => {
+                    return l.event_type === "submit"
+                    && l.date < moment().subtract(1, 'hour') 
+                    && d.isSame(l.date, 'day')
+                }).length
+            );
+            dayLabels.push(
+                d.format("YYYY-MM-DD")
+            );
+        }
+
+        response.render("stats", {
+            layout: "main.hbs",
+            title: "Statistics",
+            days: days,
+            totalViewCount: totalViewCount,
+            weeklyViewCount: weeklyViewCount,
+            dailyViewCount: dailyViewCount,
+            dailyViewsHot: dailyViewCount > 20,
+            weeklyViewsHot: weeklyViewCount > 200,
+            chartData: {
+                "labels": dayLabels,
+                "views": viewCounts,
+                "submissions": submissionCounts
+            }
+        });
+
     });
 });
 

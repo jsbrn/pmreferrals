@@ -61,6 +61,14 @@
 	font-weight: bold;
 }
 
+.xlarge {
+	font-size: 48px;
+}
+
+.pmblue {
+	color: #034045;
+}
+
 .censored {
 	color: #444;
 	background: rgb(129, 116, 100);
