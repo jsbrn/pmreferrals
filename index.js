@@ -10,6 +10,7 @@ const cleanup = require('./app/cleanup.js');
 const utilities = require('./app/utilities.js');
 const mailer = require('./app/mailer.js');
 const validator = require('./app/validator.js');
+const hasher = require('password-hash');
 const moment = require('moment');
 var Cookies = require('cookies');
 const bodyParser = require('body-parser');
@@ -114,6 +115,12 @@ app.get("/login", (request, response) => {
     });
 });
 
+app.get("/privacy", (request, response) => {
+    response.render("privacy", {
+        layout: "main.hbs",
+        title: "Privacy Statement"
+    });
+});
 
 app.get("/register", (request, response) => {
     response.render("register", {
@@ -219,8 +226,8 @@ app.post("/boost", (request, response) => {
 
 app.post('/login', (request, response, next) => {
     var cookies = new Cookies(request, response);
-    database.get("accounts", {username: request.body.username, password: request.body.password}, {}, 1, (results) => {
-        if (results.length > 0) {
+    database.get("accounts", {username: request.body.username}, {}, 1, (results) => {
+        if (results.length > 0 && hasher.verify(request.body.password, results[0].password)) {
             validator.verifyCode(results[0].code, (validator_results) => {
                 var sessionId = "X"+Math.floor((Math.random() * 100000000));
                 database.update("accounts", {username: request.body.username}, {
@@ -260,6 +267,7 @@ app.post('/register', (request, response, next) => {
     database.get("accounts", {$or: [{code: request.body.code}, {username: request.body.username}]}, {}, -1, (results) => {
         if (results.length == 0) {
             validator.verifyCode(request.body.code, (validator_results) => {
+                console.log(validator_results);
                 if (!validator_results.valid) {
                     response.json({success: false, reason: request.body.code+" is not a valid referral code."});
                     return;
@@ -269,7 +277,7 @@ app.post('/register', (request, response, next) => {
                     var sessionId = "X"+Math.floor((Math.random() * 100000000));
                     database.insert("accounts", [{
                         username: request.body.username,
-                        password: request.body.password,
+                        password: hasher.generate(request.body.password),
                         code: request.body.code,
                         url: [...Array(8).keys()]
                                 .map(e => String.fromCharCode(Math.floor(Math.random() * (122-97)) + 97))
