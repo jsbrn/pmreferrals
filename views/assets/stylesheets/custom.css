@@ -178,6 +178,17 @@ button:hover, .button:hover {
 
 .cancel:hover {
 	background:red;
+	color: white;
+}
+
+.gold {
+	background: goldenrod;
+	color: white;
+}
+
+.gold:hover {
+	background: yellow;
+	color: black;
 }
 
 .white {

@@ -24,11 +24,12 @@
 						{{#if loggedIn}}
 							<a href = "/account" class = "left-space pmblue title">My Account</a>
 						{{else}}
-							<a href = "/register" class = "left-space pmblue title">Add your code</a>
 							<a href = "/login" class = "left-space pmblue title">Login</a>
+							<a href = "/register" class = "left-space pmblue title">Add your code</a>
 						{{/if}}
 						<a href = "/stats" class = "left-space pmblue title">Statistics</a>
 						<a href = "/faq" class = "left-space pmblue title">FAQ</a>
+						{{#if loggedIn}}<a href = "/logout" class = "left-space pmblue title">Logout</a>{{/if}}
 					</span>
 				</div>
 			</div>

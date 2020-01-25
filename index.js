@@ -48,20 +48,20 @@ app.all("*", (request, response, next) => {
         var cookies = new Cookies(request, response);
         var sessionId = cookies.get("userSessionId");
         request.sessionId = sessionId;
+        request.loggedIn = request.sessionId != undefined && request.sessionId.length > 0;
         next();
     }
 });
 
 app.get('/', (request, response, next) => {
-    database.get("accounts", {}, {lastBoost: -1}, 5, (accounts) => {
-
+    database.get("accounts", {}, {boostPoints: -1, lastBoost: -1}, 5, (accounts) => {
 
         accounts.forEach(c => c.code = c.code.substring(0, 3));
         accounts.sort((a, b) => { return Math.random() > 0.5 });
 
         response.render("home", {
             layout: "main.hbs",
-            loggedIn: request.sessionId != undefined && request.sessionId.length > 0,
+            loggedIn: request.loggedIn,
             accounts: accounts,
             bad_code: request.query.bad_code,
             successful_addition: request.query.success,
@@ -72,48 +72,39 @@ app.get('/', (request, response, next) => {
 });
 
 app.get("/account", (request, response, next) => {
-    database.get("accounts", {session: request.sessionId}, {}, 1, (results) => {
-        if (results.length == 0) {
+    database.get("accounts", {}, {boostPoints: -1, lastBoost: -1}, -1, (results) => {
+        var index = results.findIndex(account => account.session === request.sessionId);
+        if (index == -1) {
             //user not logged in
             response.redirect("/login");
         } else {
             response.render("account", {
                 layout: "main.hbs",
-                account: results[0]
+                loggedIn: request.loggedIn,
+                account: results[index],
+                rank: index + 1,
+                totalAccounts: results.length
             });
         }
     }, (error) => {response.send(500);});
 });
 
 app.get('/referral/:url', (request, response, next) => {
-
-    database.get("codes", {url: request.params.url}, {}, 1, function (matching_codes) {
-        if (matching_codes.length == 0) { next(); return; } //404
-        var code = matching_codes[0];
-        validator.verifyCode(code.value, (validator_results) => {  
-            if (validator_results.error || !validator_results.valid) {
-                database.remove("codes", {url: request.params.url, carrier: code.carrier}, (deleted_codes) => {
-                    database.insert("logs", [
-                        {event_type: "delete", code: code.value, date: new Date()}
-                    ], (inserted_logs) => {
-                        response.redirect("/?carrier="+code.carrier+"&redirect=true&bad_code="+code.value);
-                    });
-                }, (err) => {});
-            } else {
-                database.insert("logs", [
-                    {event_type: "view", code: code.value, date: new Date()}
-                ], (inserted_logs) => {
-                    response.render("referral", {
-                        layout: "main.hbs",
-                        title: request.params.code,
-                        url: carriers[0].activation_url.replace("{{code}}", code.value),
-                        code: code
-                    });
-                });
-            }
+    database.get("accounts", {url: request.params.url}, {}, 1, function (matching_accounts) {
+        if (matching_accounts.length == 0) { next(); return; } //404
+        var account = matching_accounts[0];
+        database.insert("logs", [
+            {event_type: "view", code: account.code, date: new Date()}
+        ], (inserted_logs) => {
+            response.render("referral", {
+                layout: "main.hbs",
+                loggedIn: request.loggedIn,
+                title: account.code,
+                url: "https://activate.publicmobile.ca/?raf="+account.code,
+                code: account.code
+            });
         });
     }, (err) => response.send(err));
-
 });
 
 app.get("/login", (request, response) => {
@@ -132,6 +123,7 @@ app.get("/register", (request, response) => {
 app.get('/faq', (request, response) => {
     response.render("faq", {
         layout: "main.hbs",
+        loggedIn: request.loggedIn,
         title: "FAQ"
     });
 });
@@ -187,6 +179,7 @@ app.get('/stats', (request, response) => {
 
         response.render("stats", {
             layout: "main.hbs",
+            loggedIn: request.loggedIn,
             title: "Statistics",
             days: days,
             totalViewCount: totalViewCount,
@@ -210,9 +203,27 @@ app.get('/logout', (request, response) => {
     response.redirect("/");
 });
 
+app.post("/boost", (request, response) => {
+
+});
+
+app.post('/login', (request, response, next) => {
+    var cookies = new Cookies(request, response);
+    database.get("accounts", {username: request.body.username, password: request.body.password}, {}, 1, (results) => {
+        if (results.length > 0) {
+            var sessionId = "X"+Math.floor((Math.random() * 100000000));
+            database.update("accounts", {username: request.body.username}, {session: sessionId}, (results) => {
+                cookies.set("userSessionId", sessionId);
+                response.json({success: true});
+            }, (error) => {response.json({success: false, reason: "Database error"})});
+        } else {
+            response.json({success:false, reason: "Incorrect username or password!"});
+        }
+    }, (err) => response.json({success:false, reason: "Database error"}));
+});
+
 app.post('/register', (request, response, next) => {
     var cookies = new Cookies(request, response);
-    console.log(request.body);
     database.get("accounts", {username: request.body.username, code: request.body.code}, {}, 1, (results) => {
         if (results.length == 0) {
             validator.verifyCode(request.body.code, (validator_results) => {
@@ -227,6 +238,9 @@ app.post('/register', (request, response, next) => {
                         username: request.body.username,
                         password: request.body.password,
                         code: request.body.code,
+                        url: [...Array(8).keys()]
+                                .map(e => String.fromCharCode(Math.floor(Math.random() * (122-97)) + 97))
+                                .reduce((total, curr) => { return total+""+curr; }),
                         boostPoints: 0,
                         lastBoost: new Date(),
                         boostCooldown: 0,
@@ -247,6 +261,7 @@ app.post('/register', (request, response, next) => {
 app.get('*', (request, response) => {
     response.render("404", {
         layout: "main.hbs",
+        loggedIn: request.loggedIn,
         title: "Not found"
     });
 });
