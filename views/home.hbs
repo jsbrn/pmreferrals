@@ -21,7 +21,7 @@
                 <span class = "title">Public Mobile has what you need.</span>
             </div>
             <div class = "row">
-                <p>Switch to {{carrier.name}} for <b class = "green">$10</b> off your first month. It's simple:</p>
+                <p>Switch to Public Mobile for <b class = "green">$10</b> off your first month. It's simple:</p>
                 <ol>
                     <li><a target = "_blank" href = "https://store.publicmobile.ca/">Order a Public Mobile SIM card.</a></li>
                     <li>Grab a <b>referral code</b> by clicking one down below.</li>
@@ -72,11 +72,11 @@
                 {{#if empty}}
                     <span>Looks like we're out of codes! Come back later.<img style = "position: relative; top: 4px;" src = "/images/downvote.png"></img></span>
                 {{else}}
-                    {{#each codes as |code|}}
+                    {{#each accounts as |account|}}
                         <div class = "row">
-                            <div id="{{code.url}}" class = "card noselect clickable bottom-space">
-                                <img class = "carrier-icon right-space" title = "{{../../carrier.name}} referral" src = "/images/logos/{{code.carrier}}.png"></img>
-                                <span class = "large code">{{code.value}}<span class = "censored">###</span></span>
+                            <div id="{{account.url}}" class = "card noselect clickable bottom-space">
+                                <img class = "carrier-icon right-space" src = "/images/logos/pm.png"></img>
+                                <span class = "large code">{{account.code}}<span class = "censored">###</span></span>
                             </div>
                         </div>
                     {{/each}}
@@ -84,14 +84,9 @@
             </div>
         </div>
     </div>
-    <div class = "one-third column bottom-space">
-        
-    </div>
 </div>
 
 <script>
-
-    document.getElementById('carrierChooser').addEventListener("change", changeCarrier, true);
 
     var cards = document.querySelectorAll('.card');
     cards.forEach(function(card) {

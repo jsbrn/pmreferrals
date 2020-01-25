@@ -104,7 +104,7 @@ ul {
 	box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
 }
 
-input[type="text"], select {
+input[type="text"], input[type="password"], select {
 	border: 1px solid black;
 	-webkit-box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);
 	-moz-box-shadow: 1px 1px 2px 1px rgba(0,0,0,0.25);

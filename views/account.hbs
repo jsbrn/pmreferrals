@@ -1,0 +1,66 @@
+<div class = "container large-top-space">
+    <div class = "one-half column">
+        <div class = "row bottom-space">
+            <span class = "large title">Hi, {{account.username}}!</span>
+        </div>
+        <div class = "row bottom-space">
+            You can manage your account here.
+        </div>
+        <div class = "row bottom-space">
+            <span class = "large title code censored">{{account.code}}</span>
+        </div>
+        <div class = "row bottom-space">
+            <a href = "/logout" class = "cancel button">Log out</a>
+        </div>
+    </div>
+    <div class = "one-half column">
+        <div class = "row bottom-space">
+            <span class = "large title">Boost your code</span>
+        </div>
+        <div class = "row bottom-space">
+            Displays your code on the front page for a period of time. You can only
+            boost once every 12 hours.
+        </div>
+        <div class = "row bottom-space">
+            <button class = "confirm">Boost your code!</button>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    $('#submitButton').click(submit);
+    $('#codeInput').click(keyUp);
+    $('#usernameInput').focus();
+    $('#errorMessage').hide();
+
+    function keyUp(event) {
+        if (event.keyCode == 13) submit();
+    }
+
+    function submit() {
+        $("#errorMessage").hide();
+        $.ajax({
+        'url':'/register',
+        'method':'POST',
+        'dataType': 'json',
+        'contentType': 'application/json',
+        'data': JSON.stringify({
+            "username": $("#usernameInput").val(),
+            "password": $("#passwordInput").val(),
+            "code": $("#codeInput").val()
+         }),
+         'processData': false,
+         'success': function (data, status) {
+             if (!data.success) {
+                 $("#errorMessage").html(data.reason);
+                 $("#errorMessage").show();
+             } else {
+                 window.location.href = "/account";
+             }
+         }
+      });
+    }
+
+</script>
+
