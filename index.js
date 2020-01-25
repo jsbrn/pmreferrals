@@ -163,7 +163,9 @@ app.get('/stats', (request, response) => {
         }).length;
 
         var viewCounts = new Array();
+        var deletionCounts = new Array();
         var submissionCounts = new Array();
+        var boostCounts = new Array();
         var dayLabels = new Array();
         
         var days = request.query.days ? parseInt(request.query.days) : 14;
@@ -177,6 +179,20 @@ app.get('/stats', (request, response) => {
             viewCounts.push(
                 logs.filter((l) => {
                     return l.event_type === "view"
+                    && l.date < moment().subtract(1, 'hour')
+                    && d.isSame(l.date, 'day')
+                }).length
+            );
+            boostCounts.push(
+                logs.filter((l) => {
+                    return l.event_type === "boost"
+                    //&& l.date < moment().subtract(1, 'hour')
+                    && d.isSame(l.date, 'day')
+                }).length
+            );
+            deletionCounts.push(
+                logs.filter((l) => {
+                    return l.event_type === "delete"
                     && l.date < moment().subtract(1, 'hour')
                     && d.isSame(l.date, 'day')
                 }).length
@@ -206,11 +222,30 @@ app.get('/stats', (request, response) => {
             chartData: {
                 "labels": dayLabels,
                 "views": viewCounts,
-                "submissions": submissionCounts
+                "submissions": submissionCounts,
+                "boosts": boostCounts,
+                "deletions": deletionCounts
             }
         });
 
     });
+});
+
+app.get("/account/delete", (request, response) => {
+    database.get("accounts", {session: request.sessionId}, {}, -1, (results) => {
+        if (results.length == 0) return;
+        database.remove("accounts", {session: request.sessionId}, (deleted) => {
+            database.insert("logs", [{
+                event_type: "delete",
+                code: results[0].code,
+                date: new Date()
+            }], (results) => {
+                var cookies = new Cookies(request, response);
+                cookies.set("userSessionId", "");
+                response.redirect("/");
+            }, (error) => {});
+        }, (error) => {});
+    }, (error) => {});
 });
 
 app.get('/logout', (request, response) => {
@@ -227,7 +262,14 @@ app.post("/boost", (request, response) => {
                     lastBoost: new Date(),
                     boostPoints: results[0].boostPoints + 1,
                     boostCooldown: 10 + (Math.random() * 4)
-                }, (results) => {
+                }, (updated) => {
+                    database.insert("logs", [{
+                        event_type: "boost",
+                        code: results[0].code,
+                        date: new Date()
+                    }], (inserted) => {
+
+                    }, (error) => {});
                     response.json({success: true});
                 }, (error) => {response.json({success: false, reason: "Database error"})});
             } else {
@@ -247,7 +289,7 @@ app.post('/login', (request, response, next) => {
                 var sessionId = "X"+Math.floor((Math.random() * 100000000));
                 database.update("accounts", {username: request.body.username}, {
                     session: sessionId,
-                    disabled: !validator_results.valid,
+                    disabled: !validator_results.valid && !validator_results.error,
                 }, (results) => {
                     cookies.set("userSessionId", sessionId, {maxAge: 1000*60*60*24*7});
                     response.json({success: true});
@@ -287,7 +329,7 @@ app.post('/register', (request, response, next) => {
                     response.json({success: false, reason: request.body.code+" is not a valid referral code."});
                     return;
                 } else if (validator_results.error) {
-                    response.json({success: false, reason: "An unknown error occured."});
+                    response.json({success: false, reason: "Failed to contact the verification server."});
                 } else {
                     var sessionId = "X"+Math.floor((Math.random() * 100000000));
                     database.insert("accounts", [{
@@ -303,8 +345,14 @@ app.post('/register', (request, response, next) => {
                         session: sessionId,
                         disabled: false
                     }], (results) => {
-                        cookies.set("userSessionId", sessionId);
-                        response.json({success: true});
+                        database.insert("logs", [{
+                            event_type: "submit",
+                            code: request.body.code,
+                            date: new Date()
+                        }], (results) => {
+                            cookies.set("userSessionId", sessionId);
+                            response.json({success: true});
+                        }, (error) => {});
                     })
                 }
             });  

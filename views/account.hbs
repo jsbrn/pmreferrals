@@ -3,7 +3,7 @@
         {{#if account.disabled}}
             <div class = "failure-panel bottom-space">
                 It looks like your code is no longer a valid Public Mobile referral code.
-                It will no longer show up on the front page, regardless of rank.
+                It will not show up on the front page, regardless of rank.
                 If you've switched Public Mobile accounts, you'll have to delete this code and register a new one.
             </div>
         {{/if}}
@@ -20,9 +20,7 @@
                 <span class = "large title code censored white">{{account.code}}</span>
             </div>
             <div class = "row bottom-space">
-                <a href = "#" class = "pmblue">Change username or password</a>
-                <br>
-                <a href = "#" class = "pmblue">Delete account</a>
+                <a href = "/account/delete" class = "pmblue">Delete account</a>
             </div>
         </div>
         <div class = "one-half column">
