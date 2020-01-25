@@ -28,8 +28,10 @@ function verifyCode(code, callback) {
     axios.get("https://activate.publicmobile.ca/?raf="+code, { httpsAgent: agent })
         .then(function (axios_response) {
             //if it has the green checkmark it's a valid code
+            var broken_page = !axios_response.data.includes("ok_16x16") && !axios_response.data.includes("failure_16x16");
             callback({
-                valid: axios_response.data.includes("ok_16x16")
+                valid: axios_response.data.includes("ok_16x16"),
+                error: broken_page
             })
         })
         .catch(function (err) {

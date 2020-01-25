@@ -80,7 +80,7 @@ app.get("/account", (request, response, next) => {
                 loggedIn: request.loggedIn,
                 account: results[index],
                 rank: results[index].disabled ? '-' : index + 1,
-                totalAccounts: results.length,
+                totalAccounts: results.filter(a => !a.disabled).length,
                 boostAllowed: results[index].lastBoost < moment().subtract(results[index].boostCooldown, "hours"),
                 cooldownRemaining: Math.ceil(moment.duration(
                     moment(results[index].lastBoost).add(results[index].boostCooldown, "hours").diff(moment())).asHours())
@@ -109,22 +109,16 @@ app.get('/referral/:url', (request, response, next) => {
 
 app.get("/login", (request, response) => {
     response.render("login", {
-        layout: "main.hbs"
+        layout: "main.hbs",
+        title: "Login"
     });
 });
 
 
 app.get("/register", (request, response) => {
     response.render("register", {
-        layout: "main.hbs"
-    });
-});
-
-app.get('/faq', (request, response) => {
-    response.render("faq", {
         layout: "main.hbs",
-        loggedIn: request.loggedIn,
-        title: "FAQ"
+        title: "Submit your code"
     });
 });
 
@@ -209,7 +203,7 @@ app.post("/boost", (request, response) => {
             if (results[0].lastBoost < moment().subtract(results[0].boostCooldown, 'hours')) {
                 database.update("accounts", {session: request.sessionId}, { 
                     lastBoost: new Date(),
-                    boostPoints: Math.max(1, results[0].boostPoints),
+                    boostPoints: results[0].boostPoints + 1,
                     boostCooldown: 10 + (Math.random() * 4)
                 }, (results) => {
                     response.json({success: true});
@@ -231,7 +225,7 @@ app.post('/login', (request, response, next) => {
                 var sessionId = "X"+Math.floor((Math.random() * 100000000));
                 database.update("accounts", {username: request.body.username}, {
                     session: sessionId,
-                    disabled: !validator_results.valid
+                    disabled: !validator_results.valid,
                 }, (results) => {
                     cookies.set("userSessionId", sessionId, {maxAge: 1000*60*60*24*7});
                     response.json({success: true});

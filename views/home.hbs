@@ -1,19 +1,4 @@
 <div class = "container large-top-space">
-    {{#if successful_addition}}
-        <div class = "row bottom-space success-panel">
-            <center>
-                <b>Your code was successfully added! Keep an eye out for those referral bonuses.</b>
-            </center>
-        </div>
-    {{/if}}
-    {{#if redirect}}
-        <div class = "row bottom-space info-panel">
-            <center>
-                <b>Whoops! The code <span class = "code">{{bad_code}}</span> is no longer valid. Don't worry, it's been removed. Try again?</b>
-            </center>
-        </div>
-    {{/if}}
-
     <div class = "row">
         <div class = "two-thirds column bottom-space">
             <div class = "row bottom-space">
@@ -65,8 +50,8 @@
         </div>
         <div class = "one-half column">
             <div class = "row bottom-space">
-                <span class = "large title">Today's Codes</span>
-                <img title = "The 5 most recently boosted codes are displayed in a random order. Create a PMReferrals account to get on this list!" src = "/images/question.png"></img>
+                <span class = "large title">This Week's Codes</span>
+                <img title = "Referral codes are ranked by the number of points they accumulate. The points reset each week." src = "/images/question.png"></img>
             </div>
             <div class = "row bottom-space">
                 {{#if empty}}
@@ -77,12 +62,17 @@
                             <div id="{{account.url}}" class = "card noselect clickable bottom-space">
                                 <img class = "carrier-icon right-space" src = "/images/logos/pm.png"></img>
                                 <span class = "large code">{{account.code}}<span class = "censored">###</span></span>
+                                <img class = "left-space" src = "/images/boost.png"></img>
+                                <span class = "" style = "position: relative; top: -6px; left: 3px;">{{account.boostPoints}}</span>
                             </div>
                         </div>
                     {{/each}}
                 {{/if}}
             </div>
         </div>
+    </div>
+    <div class = "container large-top-space bottom-space">
+        <i>PMReferrals.ca is a third-party tool and is not affiliated with Public Mobile.</i>
     </div>
 </div>
 

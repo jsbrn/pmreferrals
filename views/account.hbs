@@ -20,7 +20,9 @@
                 <span class = "large title code censored white">{{account.code}}</span>
             </div>
             <div class = "row bottom-space">
-                <a href = "/logout" class = "cancel button">Log out</a>
+                <a href = "#" class = "pmblue">Change username or password</a>
+                <br>
+                <a href = "#" class = "pmblue">Delete account</a>
             </div>
         </div>
         <div class = "one-half column">
@@ -28,9 +30,16 @@
                 <span class = "large title">Current Rank</span>
             </div>
             <div class = "row">
-                <span class = "large code">{{rank}}</span><sup>(out of {{totalAccounts}})</sup>
-                <br>
-                Only the top 5 codes are visible on the front page. Keep boosting your code to stay on top!
+                <span class = "large code">{{rank}}</span><sup> / {{totalAccounts}}</sup>
+                <img class = "left-space" src = "/images/boost.png"></img>
+                <b class = "" style = "position: relative; top: -6px; left: 3px;">{{account.boostPoints}}</b>
+            </div>
+            <div class = "row bottom-space">
+                Your rank is determined by the number of boosts (<img style = "position: relative; top: 3px;" src = "/images/boost.png" width = "16px"></img>) 
+                you've collected during the week.
+                The referral codes with the highest boost counts are shown to visitors on the main page. Only the top 5 are visible.
+                <br><br>
+                All scores reset at the start of every week.
             </div>
         </div>
     </div>
@@ -40,10 +49,11 @@
                 <span class = "large title">
                     Boost your code
                 </span>
+                <img src = "/images/boost.png"></img>
+                <b class = "" style = "position: relative; top: -6px; left: 3px;">+1</b>
             </div>
             <div class = "row bottom-space">
-                Displays your code on the front page for a period of time. You can only
-                boost once every 12 hours.
+                Once a day you can boost your score by one point.
             </div>
             <div class = "row bottom-space">
                 <button id = "boostButton" class = "gold">
@@ -53,20 +63,20 @@
                         Unlocks in {{cooldownRemaining}} hours
                     {{/if}}
                 </button>
-                <br>
-                Last boost: <b>{{account.lastBoost}}</b>
             </div>
         </div>
         <div class = "one-half column">
             <div class = "row bottom-space">
                 <span class = "large title">Share PMReferrals.ca</span>
+                <img src = "/images/boost.png"></img>
+                <b class = "" style = "position: relative; top: -6px; left: 3px;">+3 /click</b>
             </div>
             <div class = "row bottom-space">
-                Share this link with others. It takes them to the front page. 
-                The more people see it, the higher your code will rank.
+                Share a custom link with others that takes them to the front page. 
+                The more people click it, the higher your code will rank.
             </div>
             <div class = "row bottom-space">
-                <span class = "code">https://pmreferrals.ca/{{account.url}}</span>
+                <span class = "code red">COMING SOON</span>
             </div>
         </div>
     </div>
