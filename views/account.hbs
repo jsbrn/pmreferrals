@@ -1,11 +1,20 @@
 <div class = "container large-top-space">
     <div class = "row">
+        {{#if account.disabled}}
+            <div class = "failure-panel bottom-space">
+                It looks like your code is no longer valid Public Mobile referral code.
+                It will no longer show up on the front page, regardless of rank.
+                If you've switched Public Mobile accounts, you'll have to delete this code and register a new one.
+            </div>
+        {{/if}}
+    </div>
+    <div class = "row">
         <div class = "one-half column">
             <div class = "row bottom-space">
                 <span class = "large title">Hi, {{account.username}}!</span>
             </div>
             <div class = "row bottom-space">
-                You can manage your account here.
+                Your referral code is:
             </div>
             <div class = "row bottom-space">
                 <span class = "large title code censored white">{{account.code}}</span>
@@ -28,14 +37,22 @@
     <div class = "row">
         <div class = "one-half column">
             <div class = "row bottom-space">
-                <span class = "large title">Boost your code</span>
+                <span class = "large title">
+                    Boost your code
+                </span>
             </div>
             <div class = "row bottom-space">
                 Displays your code on the front page for a period of time. You can only
                 boost once every 12 hours.
             </div>
             <div class = "row bottom-space">
-                <button class = "gold">Boost your code!</button>
+                <button id = "boostButton" class = "gold">
+                    {{#if boostAllowed}}
+                        Boost it!
+                    {{else}}
+                        Unlocks in {{cooldownRemaining}} hours
+                    {{/if}}
+                </button>
                 <br>
                 Last boost: <b>{{account.lastBoost}}</b>
             </div>
@@ -71,7 +88,9 @@
         'data': JSON.stringify({}),
         'processData': false,
         'success': function (data, status) {
-            
+            if (data.success) {
+                window.location.href = "/account";
+            }
         }
       });
     }

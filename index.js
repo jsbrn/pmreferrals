@@ -54,11 +54,8 @@ app.all("*", (request, response, next) => {
 });
 
 app.get('/', (request, response, next) => {
-    database.get("accounts", {}, {boostPoints: -1, lastBoost: -1}, 5, (accounts) => {
-
+    database.get("accounts", {disabled: false}, {boostPoints: -1, lastBoost: -1}, 5, (accounts) => {
         accounts.forEach(c => c.code = c.code.substring(0, 3));
-        accounts.sort((a, b) => { return Math.random() > 0.5 });
-
         response.render("home", {
             layout: "main.hbs",
             loggedIn: request.loggedIn,
@@ -82,8 +79,11 @@ app.get("/account", (request, response, next) => {
                 layout: "main.hbs",
                 loggedIn: request.loggedIn,
                 account: results[index],
-                rank: index + 1,
-                totalAccounts: results.length
+                rank: results[index].disabled ? '-' : index + 1,
+                totalAccounts: results.length,
+                boostAllowed: results[index].lastBoost < moment().subtract(results[index].boostCooldown, "hours"),
+                cooldownRemaining: Math.ceil(moment.duration(
+                    moment(results[index].lastBoost).add(results[index].boostCooldown, "hours").diff(moment())).asHours())
             });
         }
     }, (error) => {response.send(500);});
@@ -204,18 +204,39 @@ app.get('/logout', (request, response) => {
 });
 
 app.post("/boost", (request, response) => {
-
+    database.get("accounts", {session: request.sessionId}, {}, 1, (results) => {
+        if (results.length > 0) {
+            if (results[0].lastBoost < moment().subtract(results[0].boostCooldown, 'hours')) {
+                database.update("accounts", {session: request.sessionId}, { 
+                    lastBoost: new Date(),
+                    boostPoints: Math.max(1, results[0].boostPoints),
+                    boostCooldown: 10 + (Math.random() * 4)
+                }, (results) => {
+                    response.json({success: true});
+                }, (error) => {response.json({success: false, reason: "Database error"})});
+            } else {
+                response.json({success: false, reason: "You're doing that too much."});
+            }
+        } else {
+            response.json({success:false, reason: "Incorrect username or password!"});
+        }
+    }, (err) => response.json({success:false, reason: "Database error"}));
 });
 
 app.post('/login', (request, response, next) => {
     var cookies = new Cookies(request, response);
     database.get("accounts", {username: request.body.username, password: request.body.password}, {}, 1, (results) => {
         if (results.length > 0) {
-            var sessionId = "X"+Math.floor((Math.random() * 100000000));
-            database.update("accounts", {username: request.body.username}, {session: sessionId}, (results) => {
-                cookies.set("userSessionId", sessionId);
-                response.json({success: true});
-            }, (error) => {response.json({success: false, reason: "Database error"})});
+            validator.verifyCode(results[0].code, (validator_results) => {
+                var sessionId = "X"+Math.floor((Math.random() * 100000000));
+                database.update("accounts", {username: request.body.username}, {
+                    session: sessionId,
+                    disabled: !validator_results.valid
+                }, (results) => {
+                    cookies.set("userSessionId", sessionId, {maxAge: 1000*60*60*24*7});
+                    response.json({success: true});
+                }, (error) => {response.json({success: false, reason: "Database error"})});
+                });
         } else {
             response.json({success:false, reason: "Incorrect username or password!"});
         }
@@ -244,7 +265,8 @@ app.post('/register', (request, response, next) => {
                         boostPoints: 0,
                         lastBoost: new Date(),
                         boostCooldown: 0,
-                        session: sessionId
+                        session: sessionId,
+                        disabled: false
                     }], (results) => {
                         cookies.set("userSessionId", sessionId);
                         response.json({success: true});
