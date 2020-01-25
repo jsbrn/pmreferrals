@@ -50,14 +50,14 @@ app.get('/', (request, response, next) => {
 
         var selectedCarriers = carriers.filter(c => c.id == (request.query.carrier ? request.query.carrier : "pm"));
         if (selectedCarriers.length == 0) { next(); return; }
-        database.get("codes", {carrier: selectedCarriers[0].id}, {}, -1, (codes) => {
+        database.get("codes", {carrier: selectedCarriers[0].id}, {lastBoost: -1}, 5, (codes) => {
     
             codes.forEach(c => c.value = c.value.substring(0, 3));
-            codes.sort((a, b) => { return Math.random() > (a.priority ? 0.9 : 0.5) ? 1 : -1; });
+            codes.sort((a, b) => { return Math.random() > 0.5 });
 
             response.render("home", {
                 layout: "main.hbs",
-                codes: utilities.chunkArray(codes, 3),
+                codes: codes,
                 redirect: request.query.redirect,
                 bad_code: request.query.bad_code,
                 successful_addition: request.query.success,

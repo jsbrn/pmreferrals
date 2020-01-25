@@ -14,17 +14,31 @@
         </div>
     {{/if}}
 
-    <div class = "row bottom-space">
-        <span class = "large title">Get $10 off your first month with {{carrier.name}}</span>
+    <div class = "row">
+        <div class = "two-thirds column bottom-space">
+            <div class = "row bottom-space">
+                <span class = "large title">Looking for a <span class = "green">cheaper</span> phone plan?</span><br>
+                <span class = "title">Public Mobile has what you need.</span>
+            </div>
+            <div class = "row">
+                <p>Switch to {{carrier.name}} for <b class = "green">$10</b> off your first month. It's simple:</p>
+                <ol>
+                    <li><a target = "_blank" href = "https://store.publicmobile.ca/">Order a Public Mobile SIM card.</a></li>
+                    <li>Grab a <b>referral code</b> by clicking one down below.</li>
+                    <li>Enter the code while <a target = "_blank" href = "https://activate.publicmobile.ca">activating your SIM card.</a></li>
+                    <li>Enjoy your $10 bonus and save money on a much better phone plan.</li>
+                </ol>
+                <b class = "red">Stick it to the big telecom companies</b> and stop wasting your hard earned cash: switch to Public Mobile today!
+            </div>
+        </div>
+        <div class = "one-third column">
+            <img src = "/images/money.png"></img>
+        </div>
     </div>
-    <div class = "row bottom-space">
-        Many cellular providers offer signup rewards if you provide a code during registration. 
-        Choose a carrier, then click the referral code you want to use. If you already have a plan and want to share your referral code, you can do that instead.
-    </div>
-    <div class = "row bottom-space">
+    <!--div class = "row bottom-space">
         <a href = "/submit?carrier={{carrier.id}}" class = "confirm button">Submit your code</a>
-    </div>
-    <div class = "row bottom-space">
+    </div-->
+    <!--div class = "row bottom-space">
         <div class = "one-half column">
             <label for="carrierChooser">Or choose a carrier</label>
             <select length = "4444" id = "carrierChooser" class = "u-full-width">
@@ -33,21 +47,46 @@
                 {{/each}}
             </select>
         </div>
-    </div>
-    {{#if empty}}
-        <span>No results found! <img style = "position: relative; top: 4px;" src = "/images/downvote.png"></img></span>
-    {{else}}
-        {{#each codes as |row|}}
-            <div class = "row">
-            {{#each row as |code|}}
-                <div id="{{code.url}}"class = "one-third column card noselect clickable bottom-space">
-                    <img class = "carrier-icon right-space" title = "{{../../carrier.name}} referral" src = "/images/logos/{{code.carrier}}.png"></img>
-                    <span class = "large code">{{code.value}}<span class = "censored">###</span></span>
-                </div>
-            {{/each}}
+    </div-->
+    <div class = "row">
+        <div class = "one-half column">
+            <div class = "row bottom-space">
+                <span class = "large title">Why Public Mobile?</span>
             </div>
-        {{/each}}
-    {{/if}}
+            <div class = "row">
+                <ul>
+                    <li class = "li-center">Unlimited Canadian talk and text</li>
+                    <li class = "li-center">No overage charges</li class = "li-center">
+                    <li class = "li-center">Cheap plans</li class = "li-center">
+                    <li class = "li-center">Lower your monthly bill by referring others</li class = "li-center">
+                    <li class = "li-center"><b>Keep your current number!</b></li class = "li-center">
+                </ul>
+            </div>
+        </div>
+        <div class = "one-half column">
+            <div class = "row bottom-space">
+                <span class = "large title">Today's Codes</span>
+                <img title = "The 5 most recently boosted codes are displayed in a random order. Create a PMReferrals account to get on this list!" src = "/images/question.png"></img>
+            </div>
+            <div class = "row bottom-space">
+                {{#if empty}}
+                    <span>Looks like we're out of codes! Come back later.<img style = "position: relative; top: 4px;" src = "/images/downvote.png"></img></span>
+                {{else}}
+                    {{#each codes as |code|}}
+                        <div class = "row">
+                            <div id="{{code.url}}" class = "card noselect clickable bottom-space">
+                                <img class = "carrier-icon right-space" title = "{{../../carrier.name}} referral" src = "/images/logos/{{code.carrier}}.png"></img>
+                                <span class = "large code">{{code.value}}<span class = "censored">###</span></span>
+                            </div>
+                        </div>
+                    {{/each}}
+                {{/if}}
+            </div>
+        </div>
+    </div>
+    <div class = "one-third column bottom-space">
+        
+    </div>
 </div>
 
 <script>

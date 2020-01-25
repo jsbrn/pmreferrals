@@ -1,3 +1,7 @@
+body {
+	font-family: 'Open Sans', sans-serif;
+}
+
 .bg-color {
 	background: #F4E8D9;
 }
@@ -67,6 +71,10 @@
 
 .pmblue {
 	color: #034045;
+}
+
+ul {
+	list-style-image: url('/images/verified.png');
 }
 
 .censored {
