@@ -28,7 +28,7 @@
 <script>
 
     $('#submitButton').click(submit);
-    $('#codeInput').click(keyUp);
+    $('#codeInput').keypress(keyUp);
     $('#usernameInput').focus();
     $('#errorMessage').hide();
 
@@ -37,6 +37,7 @@
     }
 
     function submit() {
+        $("#submitButton").html("Please wait...");
         $("#errorMessage").hide();
         $.ajax({
         'url':'/register',
@@ -51,8 +52,9 @@
          'processData': false,
          'success': function (data, status) {
              if (!data.success) {
-                 $("#errorMessage").html(data.reason);
-                 $("#errorMessage").show();
+                $("#errorMessage").html(data.reason);
+                $("#errorMessage").show();
+                $("#submitButton").html("Sign up");
              } else {
                  window.location.href = "/account";
              }

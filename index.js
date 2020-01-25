@@ -239,11 +239,29 @@ app.post('/login', (request, response, next) => {
 
 app.post('/register', (request, response, next) => {
     var cookies = new Cookies(request, response);
-    database.get("accounts", {username: request.body.username, code: request.body.code}, {}, 1, (results) => {
+
+    if (!request.body.password || !request.body.username || !request.body.code) {
+        response.json({success:false,reason:"Looks like you're missing something."});
+        return;
+    }
+
+    request.body.code = request.body.code.toUpperCase();
+
+    if (request.body.password.length < 6) {
+        response.json({success:false,reason:"Your password must be at least 6 characters long."});
+        return;
+    }
+
+    if (request.body.username.length < 4) {
+        response.json({success:false,reason:"Your username must be at least 4 characters long."});
+        return;
+    }
+
+    database.get("accounts", {$or: [{code: request.body.code}, {username: request.body.username}]}, {}, -1, (results) => {
         if (results.length == 0) {
             validator.verifyCode(request.body.code, (validator_results) => {
                 if (!validator_results.valid) {
-                    response.json({success: false, reason: "The code "+request.body.code+" is not valid."});
+                    response.json({success: false, reason: request.body.code+" is not a valid referral code."});
                     return;
                 } else if (validator_results.error) {
                     response.json({success: false, reason: "An unknown error occured."});
@@ -268,7 +286,9 @@ app.post('/register', (request, response, next) => {
                 }
             });  
         } else {
-            response.json({success:false, reason: "Username already exists!"});
+            response.json({success:false, reason: results[0].username === request.body.username 
+                ? "That username has been taken." 
+                : "This code has been registered already."});
         }
     }, (err) => response.json({success:false, reason: "Database error"}));
 });

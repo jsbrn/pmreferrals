@@ -27,15 +27,16 @@
 <script>
 
     $('#submitButton').click(submit);
-    $('#passwordInput').click(keyUp);
+    $('#passwordInput').keypress(keyUp);
     $('#usernameInput').focus();
     $('#errorMessage').hide();
 
     function keyUp(event) {
-        if (event.keyCode == 13) submit();
+        if (event.which == 13) submit();
     }
 
     function submit() {
+        $("#submitButton").html("Logging in...");
         $("#errorMessage").hide();
         $.ajax({
         'url':'/login',
@@ -51,6 +52,7 @@
              if (!data.success) {
                  $("#errorMessage").html(data.reason);
                  $("#errorMessage").show();
+                 $("#submitButton").html("Log in");
              } else {
                  window.location.href = "/account";
              }
