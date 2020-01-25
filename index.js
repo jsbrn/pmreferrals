@@ -54,6 +54,21 @@ app.all("*", (request, response, next) => {
     }
 });
 
+//reset account scores once each week
+app.all("*", (request, response, next) => {
+    var week = moment().week();
+    database.get("meta", {lastWeekReset: week}, {}, -1, (results) => {
+        if (results.length == 0) {
+            //no record of resetting this week, so time to reset
+            console.log("Time to reset scores (week "+week+")");
+            database.update("accounts", {}, {boostPoints: 0, lastBoost: new Date()}, (results) => {
+                database.update("meta", {}, {lastWeekReset: week}, (results) => {}, (error) => {});
+                next();
+            }, (error) => {});
+        } else { next(); }
+    }, (error) => {});
+});
+
 app.get('/', (request, response, next) => {
     database.get("accounts", {disabled: false}, {boostPoints: -1, lastBoost: -1}, 5, (accounts) => {
         accounts.forEach(c => c.code = c.code.substring(0, 3));
