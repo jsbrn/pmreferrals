@@ -61,7 +61,7 @@ app.all("*", (request, response, next) => {
         if (results.length == 0) {
             //no record of resetting this week, so time to reset
             console.log("Time to reset scores (week "+week+")");
-            database.update("accounts", {}, {boostPoints: 0, lastBoost: new Date()}, (results) => {
+            database.update("accounts", {}, {boostPoints: 0}, (results) => {
                 database.update("meta", {}, {lastWeekReset: week}, (results) => {}, (error) => {});
                 next();
             }, (error) => {});
