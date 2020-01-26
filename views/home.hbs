@@ -1,4 +1,7 @@
 <div class = "container large-top-space">
+    <div id = "content-mobile" class = "row bottom-space">
+        <button id = "skipTo" class = "gold">Skip to codes</button>
+    </div>
     <div class = "row">
         <div class = "two-thirds column bottom-space">
             <div class = "row bottom-space">
@@ -37,8 +40,8 @@
         </div>
         <div class = "one-half column">
             <div class = "row bottom-space">
-                <span class = "large title">This Week's Codes</span>
-                <img title = "Referral codes are ranked by the number of points they accumulate. The points reset each week." src = "/images/question.png"></img>
+                <span id = "codesDiv" class = "large title">This Week's Codes</span>
+                <img id = "tooltip" title = "Referral codes are ranked by the number of points they accumulate. The points reset each week." class = "clickable" src = "/images/question.png"></img>
             </div>
             <div class = "row bottom-space">
                 {{#if empty}}
@@ -46,7 +49,7 @@
                 {{else}}
                     {{#each accounts as |account|}}
                         <div class = "row">
-                            <div id="{{account.url}}" class = "card noselect clickable bottom-space">
+                            <div id="{{account.url}}" class = "card noselect {{#if loggedIn}}clickable{{/if}} bottom-space">
                                 <img class = "carrier-icon right-space" src = "/images/logos/pm.png"></img>
                                 <span class = "large code">{{account.code}}<span class = "censored">###</span></span>
                                 <img class = "left-space" src = "/images/boost.png"></img>
@@ -65,12 +68,21 @@
 </div>
 
 <script>
-
+    $("#tooltip").click((event) => {
+        alert("Referral codes are ranked by the number of points they accumulate. The points reset each week.");
+    });
+    $("#skipTo").click((event) => {
+        window.scrollTo(0, document.getElementById("codesDiv").getBoundingClientRect().top);
+    })
+</script>
+{{#if loggedIn}}
+{{else}}
+<script>
     var cards = document.querySelectorAll('.card');
     cards.forEach(function(card) {
         card.addEventListener('click', function(event) {
             window.location.replace("/referral/"+card.id);
         }, true);
     });
-
 </script>
+{{/if}}

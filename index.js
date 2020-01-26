@@ -70,7 +70,7 @@ app.all("*", (request, response, next) => {
 });
 
 app.get('/', (request, response, next) => {
-    database.get("accounts", {disabled: false}, {boostPoints: -1, lastBoost: -1}, 5, (accounts) => {
+    database.get("accounts", {disabled: false}, {boostPoints: -1, lastBoost: -1}, 10, (accounts) => {
         accounts.forEach(c => c.code = c.code.substring(0, 3));
         response.render("home", {
             layout: "main.hbs",
