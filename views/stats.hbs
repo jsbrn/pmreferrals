@@ -40,15 +40,27 @@
         },
         series: [
             {
-                name: 'Codes viewed',
+                name: 'Clicks',
                 data: [{{#each chartData.views}}{{this}},{{/each}}]
+            },
+            {
+                name: 'Boosts',
+                data: [{{#each chartData.boosts}}{{this}},{{/each}}]
+            },
+            {
+                name: 'Shares',
+                data: [{{#each chartData.shares}}{{this}},{{/each}}]
             },
             {
                 name: 'Submissions',
                 data: [{{#each chartData.submissions}}{{this}},{{/each}}]
             },
+            {
+                name: 'Deletions',
+                data: [{{#each chartData.deletions}}{{this}},{{/each}}]
+            },
         ],
-        colors: ['#034045', '#00ff00'],
+        colors: ['#034045', '#daa520', '#add8e6', '#00ff00', '#850101'],
         xaxis: {
             type: "datetime",
             categories: [{{#each chartData.labels}}"{{this}}",{{/each}}],

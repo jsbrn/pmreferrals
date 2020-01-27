@@ -1,0 +1,59 @@
+<div class = "container large-top-space">
+    <div class = "row bottom-space">
+        <span class = "large title">Log in to PMReferrals.ca</span>
+    </div>
+    <div class = "row bottom-space">
+        <span>Check in every day to see your code's rank and give it a boost.</span>
+    </div>
+    <div class = "row bottom-space">
+        <div class="row">
+            <div class = "one-half column">
+                <input class="u-full-width" type="text" placeholder="Username" id="usernameInput">
+                <input class="u-full-width" type="password" placeholder="Password" id="passwordInput">
+            </div>
+        </div>
+        <div class = "row">
+            <button id = "submitButton" class = "confirm button">Log in</button>
+            <div id = "errorMessage" class = "red"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    $('#submitButton').click(submit);
+    $('#passwordInput').keypress(keyUp);
+    $('#usernameInput').focus();
+    $('#errorMessage').hide();
+
+    function keyUp(event) {
+        if (event.which == 13) submit();
+    }
+
+    function submit() {
+        $("#submitButton").html("Logging in...");
+        $("#errorMessage").hide();
+        $.ajax({
+        'url':'/login',
+        'method':'POST',
+        'dataType': 'json',
+        'contentType': 'application/json',
+        'data': JSON.stringify({
+            "username": $("#usernameInput").val(),
+            "password": $("#passwordInput").val(),
+         }),
+         'processData': false,
+         'success': function (data, status) {
+             if (!data.success) {
+                 $("#errorMessage").html(data.reason);
+                 $("#errorMessage").show();
+                 $("#submitButton").html("Log in");
+             } else {
+                 window.location.href = "/account";
+             }
+         }
+      });
+    }
+
+</script>
+

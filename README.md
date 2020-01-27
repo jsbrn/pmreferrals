@@ -5,9 +5,10 @@ A handy free service to find a Public Mobile referral code to get the $10 credit
 **Features**
 
 * Instantly get a referral to use when signing up for Public Mobile account.
-* Register your Public Mobile referral code to get randomly selected when other people request a referral.
-* Codes are verified on Public Mobile's website before being accepted into the database.
-* If a user closes their PM account, PMReferrals will delete the code the next time someone tries to use it.
+* Register your Public Mobile referral code to start collecting anonymous referrals.
+* Codes are ranked by a scoring system. Collect points by maintaining activity on the site, and sharing it with others.
+* Points are reset each week.
+* Codes are automatically verified on registration and login. Removed from the rankings if found to be invalid.
 
 **Contributing**
 
@@ -34,17 +35,12 @@ MONGODB_PORT=27017
 MONGODB_DATABASE=database_name
 MONGODB_SRV_RECORD=false
 
-MOCK_CODE_VALIDATION=false
-
-EMAIL_ADDRESS=example@example.com
-EMAIL_PASSWORD=password2
-SMTP_SERVER=mail.example.com
-SMTP_PORT=465
+MESSAGE=PMReferrals is down for maintenance.
+SUBMESSAGE=Come back in an hour!
+MAINTENANCE=false
 
 BASE_URL=https://example.com
 ```
-
-When `MOCK_CODE_VALIDATION` is true, the codes will always be accepted. Email is not currently used by the application, so don't worry about configuring it. It used to be, in an older version.
 
 **Bug Reports**
 

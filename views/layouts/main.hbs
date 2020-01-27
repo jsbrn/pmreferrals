@@ -8,9 +8,11 @@
 		<link rel="stylesheet" href="/css/stylesheet.css">
 		<link href="https://fonts.googleapis.com/css?family=Anton&display=swap" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=PT+Mono&display=swap" rel="stylesheet">
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="/css/normalize.css">
 		<link rel="stylesheet" href="/css/skeleton.css">
 		<link rel="stylesheet" href="/css/custom.css">
+		<script src = "/scripts/jquery.js"></script> 
 	</head>
 
 	<body class = "bg-color">
@@ -19,9 +21,14 @@
 				<div class = "two-thirds column">
 					<a title = "Go to home page" href = "/"><img src = "/images/favicon.png"></img></a>
 					<span style = "position: relative; bottom: 10px; text-decoration: none;">
-						<a href = "/" class = "left-space pmblue title">Get a referral</a>
+						{{#if loggedIn}}
+							<a href = "/account" class = "left-space pmblue title">My Account</a>
+						{{else}}
+							<a href = "/login" class = "left-space pmblue title">Login</a>
+							<a href = "/register" class = "left-space pmblue title">Add your code</a>
+						{{/if}}
 						<a href = "/stats" class = "left-space pmblue title">Statistics</a>
-						<a href = "/faq" class = "left-space pmblue title">FAQ</a>
+						{{#if loggedIn}}<a href = "/logout" class = "left-space pmblue title">Logout</a>{{/if}}
 					</span>
 				</div>
 			</div>
@@ -35,12 +42,6 @@
 			document.getElementById('nojs').style.display = "none";
 		</script>
 		{{{body}}}
-		<div class = "container large-top-space bottom-space">
-			<i>
-				PMReferrals.ca is a third-party tool and is not affiliated with Public Mobile.
-				If you have any questions or concerns, email <a href = "mailto:admin@pmreferrals.ca">admin@pmreferrals.ca</a>.
-			</i>
-		</div>
 	</body>
 
 </html>

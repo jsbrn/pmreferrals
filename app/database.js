@@ -27,9 +27,9 @@ function disconnect() {
     });
 }
 
-function update(collectionName, query, new_values, onSuccess, onFailure) {
+function update(collectionName, query, new_value, onSuccess, onFailure) {
     var collection = database.collection(collectionName);
-    collection.update(query, {$set: new_values}, function(err, docs) {
+    collection.updateMany(query, {$set: new_value}, function(err, docs) {
         if (err) { 
             console.log(err.message); 
             onFailure();
