@@ -161,16 +161,13 @@ app.get('/referral/:url', (request, response, next) => {
     database.get("accounts", {url: request.params.url}, {}, 1, function (matching_accounts) {
         if (matching_accounts.length == 0) { next(); return; } //404
         var account = matching_accounts[0];
-        database.insert("logs", [
-            {event_type: "view", code: account.code, date: new Date()}
-        ], (inserted_logs) => {
-            response.render("referral", {
-                layout: "main.hbs",
-                loggedIn: request.loggedIn,
-                title: account.code,
-                url: "https://activate.publicmobile.ca/?raf="+account.code,
-                code: account.code
-            });
+        if (!request.loggedIn) database.insert("logs", [{event_type: "view", code: account.code, date: new Date()}], (inserted_logs) => {});
+        response.render("referral", {
+            layout: "main.hbs",
+            loggedIn: request.loggedIn,
+            title: account.code,
+            url: "https://activate.publicmobile.ca/?raf="+account.code,
+            code: account.code
         });
     }, (err) => response.send(err));
 });
