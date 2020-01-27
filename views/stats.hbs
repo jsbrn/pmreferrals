@@ -48,6 +48,10 @@
                 data: [{{#each chartData.boosts}}{{this}},{{/each}}]
             },
             {
+                name: 'Shares',
+                data: [{{#each chartData.shares}}{{this}},{{/each}}]
+            },
+            {
                 name: 'Submissions',
                 data: [{{#each chartData.submissions}}{{this}},{{/each}}]
             },
@@ -56,7 +60,7 @@
                 data: [{{#each chartData.deletions}}{{this}},{{/each}}]
             },
         ],
-        colors: ['#034045', '#daa520', '#00ff00', '#850101'],
+        colors: ['#034045', '#daa520', '#add8e6', '#00ff00', '#850101'],
         xaxis: {
             type: "datetime",
             categories: [{{#each chartData.labels}}"{{this}}",{{/each}}],

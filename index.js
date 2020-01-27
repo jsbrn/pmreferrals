@@ -215,6 +215,7 @@ app.get('/stats', (request, response) => {
         var viewCounts = new Array();
         var deletionCounts = new Array();
         var submissionCounts = new Array();
+        var shareCounts = new Array();
         var boostCounts = new Array();
         var dayLabels = new Array();
         
@@ -240,17 +241,24 @@ app.get('/stats', (request, response) => {
                     && d.isSame(l.date, 'day')
                 }).length
             );
+            shareCounts.push(
+                logs.filter((l) => {
+                    return l.event_type === "share"
+                    //&& l.date < moment().subtract(1, 'hour')
+                    && d.isSame(l.date, 'day')
+                }).length
+            );
             deletionCounts.push(
                 logs.filter((l) => {
                     return l.event_type === "delete"
-                    && l.date < moment().subtract(1, 'hour')
+                    //&& l.date < moment().subtract(1, 'hour')
                     && d.isSame(l.date, 'day')
                 }).length
             );
             submissionCounts.push(
                 logs.filter((l) => {
                     return l.event_type === "submit"
-                    && l.date < moment().subtract(1, 'hour') 
+                    //&& l.date < moment().subtract(1, 'hour') 
                     && d.isSame(l.date, 'day')
                 }).length
             );
@@ -274,7 +282,8 @@ app.get('/stats', (request, response) => {
                 "views": viewCounts,
                 "submissions": submissionCounts,
                 "boosts": boostCounts,
-                "deletions": deletionCounts
+                "deletions": deletionCounts,
+                "shares": shareCounts
             }
         });
 
@@ -441,7 +450,13 @@ app.get("/:accountURL", (request, response, next) => {
                 response.redirect("/");
             } else {
                 database.update("accounts", {url: request.params.accountURL}, {boostPoints: results[0].boostPoints + 2}, (updated) => {
-                    response.redirect("/");
+                    database.insert("logs", [{
+                        event_type: "share",
+                        code: results[0].code,
+                        date: new Date()
+                    }], (results) => {
+                        response.redirect("/");
+                    }, (error) => {});
                 }, (error) => {});
             }
         }
