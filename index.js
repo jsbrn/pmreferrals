@@ -185,7 +185,8 @@ app.get("/login", (request, response) => {
 app.get("/privacy", (request, response) => {
     response.render("privacy", {
         layout: "main.hbs",
-        title: "Privacy Statement"
+        title: "Privacy Statement",
+        loggedIn: request.loggedIn
     });
 });
 
@@ -431,6 +432,23 @@ app.post('/register', (request, response, next) => {
                 : "This code has been registered already."});
         }
     }, (err) => response.json({success:false, reason: "Database error"}));
+});
+
+//linkback program, match the url with the account to reward them for a successful share
+app.get("/:accountURL", (request, response, next) => {
+    database.get("accounts", {url: request.params.accountURL}, {}, -1, (results) => {
+        if (results.length == 0) {
+            next();
+        } else {
+            if (request.seenBefore) {
+                response.redirect("/");
+            } else {
+                database.update("accounts", {url: request.params.accountURL}, {boostPoints: results[0].boostPoints + 2}, (updated) => {
+                    response.redirect("/");
+                }, (error) => {});
+            }
+        }
+    }, (error) => { next(); });
 });
 
 //catchall and 404
