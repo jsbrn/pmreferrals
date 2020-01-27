@@ -25,6 +25,7 @@ app.engine('.hbs', exphbs({
 }));
 app.set('view engine', '.hbs');
 app.set('views', path.join(__dirname, 'views'));
+app.set('trust proxy', true);
 
 /*Set locations for getting static content*/
 app.use('/assets',express.static(path.join(__dirname, 'views/assets')));
@@ -68,6 +69,7 @@ app.all("*", (request, response, next) => {
 //verify that the fingerprint has not been seen before
 //and record any unique fingerprints found
 app.get("*", (request, response, next) => {
+    request.ip = request.header('x-forwarded-for') || request.connection.remoteAddress;
     var cookies = new Cookies(request, response);
     request.hasFingerprintCookie = cookies.get("fingerprintHash") != undefined;
     request.hasSessionCookie = cookies.get("userSessionId") != undefined;
@@ -98,6 +100,11 @@ app.get("/debug/fp", (request, response) => {
     response.json(request.fingerprint);
 });
 
+//ip debugging tool
+app.get("/debug/ip", (request, response) => {
+    response.send(request.ip);
+});
+
 //reset account scores once each week
 app.all("*", (request, response, next) => {
     var week = moment().week();
@@ -119,6 +126,7 @@ app.get('/', (request, response, next) => {
         response.render("home", {
             layout: "main.hbs",
             loggedIn: request.loggedIn,
+            seenBefore: request.seenBefore,
             accounts: accounts,
             bad_code: request.query.bad_code,
             successful_addition: request.query.success,
@@ -377,7 +385,7 @@ app.post('/register', (request, response, next) => {
         response.json({success:false,reason:"Passwords cannot have whitespace."});
         return;
     }
-    if (request.body.username === request.body.code) {
+    if (request.body.username.toUpperCase() === request.body.code) {
         response.json({success:false,reason:"Your username cannot be your referral code."});
         return;
     }
@@ -397,7 +405,7 @@ app.post('/register', (request, response, next) => {
                         username: request.body.username,
                         password: hasher.generate(request.body.password),
                         code: request.body.code,
-                        url: [...Array(8).keys()]
+                        url: [...Array(5).keys()]
                                 .map(e => String.fromCharCode(Math.floor(Math.random() * (122-97)) + 97))
                                 .reduce((total, curr) => { return total+""+curr; }),
                         boostPoints: 0,

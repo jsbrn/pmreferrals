@@ -49,7 +49,7 @@
                 {{else}}
                     {{#each accounts as |account|}}
                         <div class = "row">
-                            <div id="{{account.url}}" class = "card noselect {{#if loggedIn}}clickable{{/if}} bottom-space">
+                            <div id="{{account.url}}" class = "card noselect clickable bottom-space">
                                 <img class = "carrier-icon right-space" src = "/images/logos/pm.png"></img>
                                 <span class = "large code">{{account.code}}<span class = "censored">###</span></span>
                                 <img class = "left-space" src = "/images/boost.png"></img>
@@ -75,8 +75,7 @@
         window.scrollTo(0, document.getElementById("codesDiv").getBoundingClientRect().top);
     })
 </script>
-{{#if loggedIn}}
-{{else}}
+
 <script>
     var cards = document.querySelectorAll('.card');
     cards.forEach(function(card) {
@@ -85,4 +84,3 @@
         }, true);
     });
 </script>
-{{/if}}
