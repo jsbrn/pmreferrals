@@ -13,6 +13,7 @@ const validator = require('./app/validator.js');
 const hasher = require('password-hash');
 const moment = require('moment');
 var Cookies = require('cookies');
+var Fingerprint = require('express-fingerprint');
 const bodyParser = require('body-parser');
 
 /*Set the Handlebars options, including the Helpers*/
@@ -30,6 +31,16 @@ app.use('/assets',express.static(path.join(__dirname, 'views/assets')));
 app.use('/images',express.static(path.join(__dirname, 'views/assets/images')));
 app.use('/css',express.static(path.join(__dirname, 'views/assets/stylesheets')));
 app.use('/scripts',express.static(path.join(__dirname, 'views/assets/scripts')));
+
+//fingerprint the visitor
+app.use(Fingerprint({
+    parameters:[
+        // Defaults
+        Fingerprint.useragent,
+        Fingerprint.acceptHeaders,
+        Fingerprint.geoip
+    ]
+}))
 
 app.use(express.json());
 
@@ -52,6 +63,39 @@ app.all("*", (request, response, next) => {
         request.loggedIn = request.sessionId != undefined && request.sessionId.length > 0;
         next();
     }
+});
+
+//verify that the fingerprint has not been seen before
+//and record any unique fingerprints found
+app.get("*", (request, response, next) => {
+    var cookies = new Cookies(request, response);
+    request.hasFingerprintCookie = cookies.get("fingerprintHash") != undefined;
+    request.hasSessionCookie = cookies.get("userSessionId") != undefined;
+    database.get("fingerprints", {ip: request.ip}, {}, -1, (results1) => {
+        request.seenIPBefore = results1.length > 0;
+        database.get("fingerprints", {hash: request.fingerprint.hash}, {}, -1, (results2) => {
+            request.seenFingerprintBefore = results2.length > 0;
+            request.seenBefore = 
+                request.hasFingerprintCookie 
+                || request.hasSessionCookie
+                || request.seenIPBefore
+                || (request.seenIPBefore && request.seenFingerprintBefore);
+            if (!request.seenFingerprintBefore || !request.seenIPBefore) 
+                database.insert("fingerprints", [{ip: request.ip, hash: request.fingerprint.hash}], (insertion) => {}, (error) => {});
+            cookies.set("fingerprintHash", request.fingerprint.hash, {expires: new Date('2050')});
+            next();
+        }, (error) => {});
+    }, (error) => { next(); });
+});
+
+//fingerprint debugging tool :)
+app.get("/debug/fp", (request, response) => {
+    request.fingerprint.seenBefore = request.seenBefore;
+    request.fingerprint.hasFingerprintCookie = request.hasFingerprintCookie;
+    request.fingerprint.hasSessionCookie = request.hasSessionCookie;
+    request.fingerprint.seenIPBefore = request.seenIPBefore;
+    request.fingerprint.seenFingerprintBefore = request.seenFingerprintBefore;
+    response.json(request.fingerprint);
 });
 
 //reset account scores once each week
@@ -309,15 +353,32 @@ app.post('/register', (request, response, next) => {
         return;
     }
 
-    request.body.code = request.body.code.toUpperCase();
+    request.body.code = request.body.code.trim().toUpperCase();
 
     if (request.body.password.length < 6) {
         response.json({success:false,reason:"Your password must be at least 6 characters long."});
         return;
     }
 
-    if (request.body.username.length < 4) {
-        response.json({success:false,reason:"Your username must be at least 4 characters long."});
+    if (request.body.username.length < 4 || request.body.username.length > 32) {
+        response.json({success:false,reason:"Your username must be between 4 and 32 characters long."});
+        return;
+    }
+
+    var usernameCheck = /([A-Za-z0-9])+/.exec(request.body.username);
+    var validUsername = usernameCheck != null && usernameCheck.includes(request.body.username);
+    var passwordCheck = /([^\s])*/.exec(request.body.password);
+    var validPassword = passwordCheck != null && passwordCheck.includes(request.body.password);
+    if (!validUsername) {
+        response.json({success:false,reason:"Usernames can only have letters and numbers."});
+        return;
+    }
+    if (!validPassword) {
+        response.json({success:false,reason:"Passwords cannot have whitespace."});
+        return;
+    }
+    if (request.body.username === request.body.code) {
+        response.json({success:false,reason:"Your username cannot be your referral code."});
         return;
     }
 
