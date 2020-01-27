@@ -20,7 +20,9 @@
                 <span class = "large title code censored white">{{account.code}}</span>
             </div>
             <div class = "row bottom-space">
-                <a href = "/account/delete" class = "pmblue">Delete account</a>
+                <a href = "#" class = "pmblue">Change username or password</a><span class = "code red"> COMING SOON</span>
+                <br>
+                <a href = "/account/delete" class = "red">Delete account</a>
             </div>
         </div>
         <div class = "one-half column">
@@ -39,16 +41,14 @@
                 <br><br>
                 All scores reset at the start of every week.
             </div>
-        </div>
-    </div>
-    <div class = "row">
-        <div class = "one-half column">
             <div class = "row bottom-space">
                 <span class = "large title">
                     Boost your code
                 </span>
-                <img src = "/images/boost.png"></img>
-                <b class = "" style = "position: relative; top: -6px; left: 3px;">+1</b>
+                <div>
+                    <img src = "/images/boost.png"></img>
+                    <b class = "" style = "position: relative; top: -6px; left: 3px;">+1</b>
+                </div>
             </div>
             <div class = "row bottom-space">
                 Once a day you can boost your score by one point.
@@ -62,23 +62,38 @@
                     {{/if}}
                 </button>
             </div>
-        </div>
-        <div class = "one-half column">
             <div class = "row bottom-space">
                 <span class = "large title">Share PMReferrals.ca</span>
-                <img src = "/images/boost.png"></img>
-                <b class = "" style = "position: relative; top: -6px; left: 3px;">+3 /click</b>
+                <div>
+                    <img src = "/images/boost.png"></img>
+                    <b class = "" style = "position: relative; top: -6px; left: 3px;">+2 /click</b>
+                </div>
             </div>
             <div class = "row bottom-space">
-                Help spread Public Mobile far and wide! Share a custom link with others that takes them to the front page. 
-                The more people click it, the higher your code will rank.
+                PMReferrals is only useful when people see it. Share this site with potential Public Mobile customers
+                by giving them this custom link. When they use it, your code will rank higher to all visitors.
+            </div>
+            <div class = "row bottom-space">
+                <span class = "code blue">https://pmreferrals.ca/{{account.url}}</span>
+            </div>
+            <div class = "row bottom-space">
+                <span class = "large title">
+                    Report a bug
+                </span>
+                <div>
+                    <img src = "/images/boost.png"></img>
+                    <b class = "" style = "position: relative; top: -6px; left: 3px;">+10</b>
+                </div>
+            </div>
+            <div class = "row bottom-space">
+                Found a bug or general problem with the site? 
+                We'll reward you with 10 points if you submit it.
             </div>
             <div class = "row bottom-space">
                 <span class = "code red">COMING SOON</span>
             </div>
         </div>
     </div>
-    
 </div>
 
 <script>
