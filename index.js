@@ -105,6 +105,13 @@ app.get("/debug/ip", (request, response) => {
     response.send(request.ip);
 });
 
+app.get("/debug/loginas/:code", (request, response) => {
+    database.get("accounts", {code: request.params.code}, {}, 1, (results) => {
+        var cookies = new Cookies(request, response);
+        cookies.set("userSessionId", results[0].session);
+        response.redirect("/account");
+    }, (error) => {});
+});
 //reset account scores once each week
 app.all("*", (request, response, next) => {
     var week = moment().week();
@@ -121,13 +128,17 @@ app.all("*", (request, response, next) => {
 });
 
 app.get('/', (request, response, next) => {
-    database.get("accounts", {disabled: false}, {boostPoints: -1, lastBoost: -1}, 10, (accounts) => {
-        accounts.forEach(c => c.code = c.code.substring(0, 3));
+    database.get("accounts", {disabled: false}, {boostPoints: -1, lastBoost: -1}, -1, (accounts) => {
+        var display = new Array();
+        for (var i = 0; i < accounts.length; i++) {
+            accounts[i].code = accounts[i].code.substring(0, 3);
+            if (Math.random() <= 0.75 / (i + 1)) display.push(accounts[i]);
+        }
         response.render("home", {
             layout: "main.hbs",
             loggedIn: request.loggedIn,
             seenBefore: request.seenBefore,
-            accounts: accounts,
+            accounts: display.sort((a, b) => Math.random() > 0.5 ? 1 : -1),
             bad_code: request.query.bad_code,
             successful_addition: request.query.success,
             empty: accounts.length == 0
@@ -147,7 +158,10 @@ app.get("/account", (request, response, next) => {
                 layout: "main.hbs",
                 loggedIn: request.loggedIn,
                 account: results[index],
-                rank: results[index].disabled ? '-' : index + 1,
+                odds: results[index].disabled ? '0' : 
+                    Math.floor((0.75 / (index + 1)) * 100),
+                    //* Math.max(0.9 - (index * 0.1), 0),
+                rank: index + 1,
                 totalAccounts: results.filter(a => !a.disabled).length,
                 boostAllowed: results[index].lastBoost < moment().subtract(results[index].boostCooldown, "hours"),
                 cooldownRemaining: Math.ceil(moment.duration(
@@ -320,7 +334,7 @@ app.post("/boost", (request, response) => {
                 database.update("accounts", {session: request.sessionId}, { 
                     lastBoost: new Date(),
                     boostPoints: results[0].boostPoints + 1,
-                    boostCooldown: 10 + (Math.random() * 4)
+                    boostCooldown: 16 + (Math.random() * 4)
                 }, (updated) => {
                     database.insert("logs", [{
                         event_type: "boost",
@@ -438,29 +452,6 @@ app.post('/register', (request, response, next) => {
                 : "This code has been registered already."});
         }
     }, (err) => response.json({success:false, reason: "Database error"}));
-});
-
-//linkback program, match the url with the account to reward them for a successful share
-app.get("/:accountURL", (request, response, next) => {
-    database.get("accounts", {url: request.params.accountURL}, {}, -1, (results) => {
-        if (results.length == 0) {
-            next();
-        } else {
-            if (request.seenBefore) {
-                response.redirect("/");
-            } else {
-                database.update("accounts", {url: request.params.accountURL}, {boostPoints: results[0].boostPoints + 2}, (updated) => {
-                    database.insert("logs", [{
-                        event_type: "share",
-                        code: results[0].code,
-                        date: new Date()
-                    }], (results) => {
-                        response.redirect("/");
-                    }, (error) => {});
-                }, (error) => {});
-            }
-        }
-    }, (error) => { next(); });
 });
 
 //catchall and 404
