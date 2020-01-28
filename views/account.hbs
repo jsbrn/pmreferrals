@@ -20,7 +20,15 @@
                 <span class = "large title code censored white">{{account.code}}</span>
             </div>
             <div class = "row bottom-space">
-                <a href = "/account/delete" class = "red">Delete account</a>
+                <a id = "deleteButton" href = "#" class = "red">Delete account</a>
+            </div>
+            <div class = "row bottom-space">
+                <div id = "confirmation" class = "failure-panel">
+                    <b class = "cancel">Wait! Are you sure you want to delete your account?</b>
+                    <br>
+                    <b><a class = "white" href = "/account/delete">Yes, delete</a></b>
+                    <a id = "cancelButton" class = "white left-space" href = "#">Cancel</a>
+                </div>
             </div>
         </div>
         <div class = "one-half column">
@@ -83,6 +91,13 @@
 
     $('#boostButton').click(boost);
     $('#errorMessage').hide();
+    $("#confirmation").hide();
+    $("#deleteButton").click((event) => {
+        $("#confirmation").show();
+    });
+    $("#cancelButton").click((event) => {
+        $("#confirmation").hide();
+    });
 
     function boost() {
         $("#errorMessage").hide();

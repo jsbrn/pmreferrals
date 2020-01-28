@@ -41,7 +41,10 @@
         <div class = "one-half column">
             <div class = "row bottom-space">
                 <span id = "codesDiv" class = "large title">This Week's Codes</span>
-                <img id = "tooltip" title = "Referral codes are ranked by the number of points they accumulate. The points reset each week." class = "clickable" src = "/images/question.png"></img>
+                <img id = "tooltip" class = "clickable" src = "/images/question.png"></img>
+            </div>
+            <div id = "tooltip-box" class = "row bottom-space info-panel">
+                Codes with a higher score have a higher chance of being displayed. All codes shown are displayed in a random order.
             </div>
             <div class = "row bottom-space">
                 {{#if empty}}
@@ -69,19 +72,22 @@
 </div>
 
 <script>
-    $("#tooltip").click((event) => {
-        alert("Referral codes are ranked by the number of points they accumulate. The points reset each week.");
-    });
     $("#skipTo").click((event) => {
         window.scrollTo(0, document.getElementById("codesDiv").getBoundingClientRect().top);
     })
 </script>
 
 <script>
+    var showToolTip = false;
+    $("#tooltip-box").hide();
     var cards = document.querySelectorAll('.card');
     cards.forEach(function(card) {
         card.addEventListener('click', function(event) {
             window.location.replace("/referral/"+card.id);
         }, true);
+    });
+    $("#tooltip").click((event) => {
+        showToolTip = !showToolTip;
+        if (showToolTip) $("#tooltip-box").show(); else $("#tooltip-box").hide();
     });
 </script>

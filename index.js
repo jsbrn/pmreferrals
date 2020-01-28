@@ -105,13 +105,14 @@ app.get("/debug/ip", (request, response) => {
     response.send(request.ip);
 });
 
-app.get("/debug/loginas/:code", (request, response) => {
-    database.get("accounts", {code: request.params.code}, {}, 1, (results) => {
-        var cookies = new Cookies(request, response);
-        cookies.set("userSessionId", results[0].session);
-        response.redirect("/account");
-    }, (error) => {});
-});
+// app.get("/debug/loginas/:code", (request, response) => {
+//     database.get("accounts", {code: request.params.code}, {}, 1, (results) => {
+//         var cookies = new Cookies(request, response);
+//         cookies.set("userSessionId", results[0].session);
+//         response.redirect("/account");
+//     }, (error) => {});
+// });
+
 //reset account scores once each week
 app.all("*", (request, response, next) => {
     var week = moment().week();
