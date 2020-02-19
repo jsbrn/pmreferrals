@@ -68,7 +68,7 @@ app.get("/debug/loginas/:code", (request, response) => {
     }, (error) => {});
 });
 
-//reset account scores once each week
+//decrement scores each day
 app.all("*", (request, response, next) => {
     var day = moment().dayOfYear();
     database.get("meta", {lastDecrementDay: day}, {}, -1, (results) => {
@@ -290,7 +290,7 @@ app.post("/boost", (request, response) => {
             database.update("accounts", {session: request.sessionId}, { 
                 lastBoost: accepted ? new Date() : results[0].lastBoost,
                 boostPoints: results[0].boostPoints + (accepted ? 2 : 0),
-                boostCooldown: accepted ? 24 + results[0].boostPoints : results[0].boostCooldown + 12
+                boostCooldown: accepted ? 22 + (results[0].boostPoints * 1.5) + (-2 + (Math.random() * 4)) : results[0].boostCooldown + 12
             }, (updated) => {
                 if (accepted) database.insert("logs", [{
                     event_type: "boost",
