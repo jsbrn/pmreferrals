@@ -286,24 +286,19 @@ app.get('/logout', (request, response) => {
 app.post("/boost", (request, response) => {
     database.get("accounts", {session: request.sessionId}, {}, 1, (results) => {
         if (results.length > 0) {
-            if (results[0].lastBoost < moment().subtract(results[0].boostCooldown, 'hours')) {
-                database.update("accounts", {session: request.sessionId}, { 
-                    lastBoost: new Date(),
-                    boostPoints: results[0].boostPoints + 1,
-                    boostCooldown: 16 + (Math.random() * 4)
-                }, (updated) => {
-                    database.insert("logs", [{
-                        event_type: "boost",
-                        code: results[0].code,
-                        date: new Date()
-                    }], (inserted) => {
-
-                    }, (error) => {});
-                    response.json({success: true});
-                }, (error) => {response.json({success: false, reason: "Database error"})});
-            } else {
-                response.json({success: false, reason: "You're doing that too much."});
-            }
+            var accepted = results[0].lastBoost < moment().subtract(results[0].boostCooldown, 'hours');
+            database.update("accounts", {session: request.sessionId}, { 
+                lastBoost: accepted ? new Date() : results[0].lastBoost,
+                boostPoints: results[0].boostPoints + (accepted ? 2 : 0),
+                boostCooldown: accepted ? 24 + results[0].boostPoints : results[0].boostCooldown + 12
+            }, (updated) => {
+                if (accepted) database.insert("logs", [{
+                    event_type: "boost",
+                    code: results[0].code,
+                    date: new Date()
+                }], (inserted) => {}, (error) => {});
+                response.json({success: true, accepted: accepted});
+            }, (error) => {response.json({success: false, reason: "Database error"})});
         } else {
             response.json({success:false, reason: "Incorrect username or password!"});
         }

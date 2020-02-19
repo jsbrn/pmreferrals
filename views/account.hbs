@@ -89,7 +89,7 @@
 
 <script>
 
-    $('#boostButton').click(boost);
+    {{#if boostAllowed}}$('#boostButton').click(boost);{{/if}}
     $('#errorMessage').hide();
     $("#confirmation").hide();
     $("#deleteButton").click((event) => {
