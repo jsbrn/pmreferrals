@@ -13,7 +13,6 @@ const validator = require('./app/validator.js');
 const hasher = require('password-hash');
 const moment = require('moment');
 var Cookies = require('cookies');
-var Fingerprint = require('express-fingerprint');
 const bodyParser = require('body-parser');
 
 /*Set the Handlebars options, including the Helpers*/
@@ -32,16 +31,6 @@ app.use('/assets',express.static(path.join(__dirname, 'views/assets')));
 app.use('/images',express.static(path.join(__dirname, 'views/assets/images')));
 app.use('/css',express.static(path.join(__dirname, 'views/assets/stylesheets')));
 app.use('/scripts',express.static(path.join(__dirname, 'views/assets/scripts')));
-
-//fingerprint the visitor
-app.use(Fingerprint({
-    parameters:[
-        // Defaults
-        Fingerprint.useragent,
-        Fingerprint.acceptHeaders,
-        Fingerprint.geoip
-    ]
-}))
 
 app.use(express.json());
 
@@ -66,62 +55,28 @@ app.all("*", (request, response, next) => {
     }
 });
 
-//verify that the fingerprint has not been seen before
-//and record any unique fingerprints found
-app.get("*", (request, response, next) => {
-    request.ip = request.header('x-forwarded-for') || request.connection.remoteAddress;
-    var cookies = new Cookies(request, response);
-    request.hasFingerprintCookie = cookies.get("fingerprintHash") != undefined;
-    request.hasSessionCookie = cookies.get("userSessionId") != undefined;
-    database.get("fingerprints", {ip: request.ip}, {}, -1, (results1) => {
-        request.seenIPBefore = results1.length > 0;
-        database.get("fingerprints", {hash: request.fingerprint.hash}, {}, -1, (results2) => {
-            request.seenFingerprintBefore = results2.length > 0;
-            request.seenBefore = 
-                request.hasFingerprintCookie 
-                || request.hasSessionCookie
-                || request.seenIPBefore
-                || (request.seenIPBefore && request.seenFingerprintBefore);
-            if (!request.seenFingerprintBefore || !request.seenIPBefore) 
-                database.insert("fingerprints", [{ip: request.ip, hash: request.fingerprint.hash}], (insertion) => {}, (error) => {});
-            cookies.set("fingerprintHash", request.fingerprint.hash, {expires: new Date('2050')});
-            next();
-        }, (error) => {});
-    }, (error) => { next(); });
+app.get("/debug/loginas/:code", (request, response) => {
+    database.get("accounts", {code: request.params.code}, {}, 1, (results) => {
+        if (results.length == 0) { response.sendStatus(404); return; }
+        var cookies = new Cookies(request, response);
+        if (cookies.get("adminSecret") === process.env.ADMIN_SECRET) {
+            cookies.set("userSessionId", results[0].session);
+            response.redirect("/account");
+        } else {
+            response.sendStatus(403);
+        }
+    }, (error) => {});
 });
-
-//fingerprint debugging tool :)
-app.get("/debug/fp", (request, response) => {
-    request.fingerprint.seenBefore = request.seenBefore;
-    request.fingerprint.hasFingerprintCookie = request.hasFingerprintCookie;
-    request.fingerprint.hasSessionCookie = request.hasSessionCookie;
-    request.fingerprint.seenIPBefore = request.seenIPBefore;
-    request.fingerprint.seenFingerprintBefore = request.seenFingerprintBefore;
-    response.json(request.fingerprint);
-});
-
-//ip debugging tool
-app.get("/debug/ip", (request, response) => {
-    response.send(request.ip);
-});
-
-// app.get("/debug/loginas/:code", (request, response) => {
-//     database.get("accounts", {code: request.params.code}, {}, 1, (results) => {
-//         var cookies = new Cookies(request, response);
-//         cookies.set("userSessionId", results[0].session);
-//         response.redirect("/account");
-//     }, (error) => {});
-// });
 
 //reset account scores once each week
 app.all("*", (request, response, next) => {
-    var week = moment().week();
-    database.get("meta", {lastWeekReset: week}, {}, -1, (results) => {
+    var day = moment().dayOfYear();
+    database.get("meta", {lastDecrementDay: day}, {}, -1, (results) => {
         if (results.length == 0) {
-            //no record of resetting this week, so time to reset
-            console.log("Time to reset scores (week "+week+")");
-            database.update("accounts", {}, {boostPoints: 0}, (results) => {
-                database.update("meta", {}, {lastWeekReset: week}, (results) => {}, (error) => {});
+            //no record of decrementing scores today, so time to reset
+            console.log("Time to reset scores (day "+day+")");
+            database.increment("accounts", {boostPoints: {$gt: 0}}, {boostPoints: -1}, (results) => {
+                database.update("meta", {}, {lastDecrementDay: day}, (results) => {}, (error) => {});
                 next();
             }, (error) => {});
         } else { next(); }

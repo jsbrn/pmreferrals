@@ -39,6 +39,18 @@ function update(collectionName, query, new_value, onSuccess, onFailure) {
     });
 }
 
+function increment(collectionName, query, new_value, onSuccess, onFailure) {
+    var collection = database.collection(collectionName);
+    collection.updateMany(query, {$inc: new_value}, function(err, docs) {
+        if (err) { 
+            console.log(err.message); 
+            onFailure();
+        } else {
+            onSuccess(docs);
+        }
+    });
+}
+
 function insert(collectionName, entries, onSuccess, onFailure) {
     var collection = database.collection(collectionName);
     collection.insertMany(entries, function(err, docs) {
@@ -85,4 +97,5 @@ module.exports.disconnect = disconnect;
 module.exports.insert = insert;
 module.exports.get = get;
 module.exports.update = update;
+module.exports.increment = increment;
 module.exports.remove = remove;
