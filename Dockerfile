@@ -1,16 +1,15 @@
-FROM node:10-alpine
+FROM node:18-slim
 
-WORKDIR /opt/app
+WORKDIR /usr/src/app
 
-ENV PORT=80
+COPY . ./
 
-RUN echo 'set -e' >> /boot.sh
+# Make a clean npm install
+RUN npm ci
 
-# daemon for cron jobs
-RUN echo 'crond' >> /boot.sh
-# RUN echo 'crontab .openode.cron' >> /boot.sh
+RUN ["npm", "run", "build"]
 
-RUN echo 'npm install --production' >> /boot.sh
+EXPOSE 8080
+EXPOSE 4433
 
-# npm start, make sure to have a start attribute in "scripts" in package.json
-CMD sh /boot.sh && npm start
+CMD ["node", "dist/index.js"]

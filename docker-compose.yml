@@ -1,15 +1,31 @@
-version: '3'
+version: '3.8'
+
 services:
-  www:
+  website:
+    image: localhost:5000/pmreferrals:latest
     env_file:
-      - /opt/app/.env
-
-    volumes:
-      - .:/opt/app/
+      - .env
     ports:
-      - '80:80'
-    build:
-      context: .
-    restart: always
+      - '80:8080'
+      - '443:4433'
+    #volumes:
+    #  - /etc/letsencrypt/live/pmreferrals.ca/fullchain.pem:/usr/src/app/fullchain.pem:ro
+    #  - /etc/letsencrypt/live/pmreferrals.ca/privkey.pem:/usr/src/app/privkey.pem:ro
+    depends_on:
+      - mongodb
+    deploy:
+      replicas: 1
+  mongodb:
+    image: "mongo"
+    ports:
+      - '27017:27017'
+    volumes:
+      - data:/data/db
+    env_file:
+      - .env
+    deploy:
+      replicas: 1
 
-
+volumes:
+  data:
+    driver: local

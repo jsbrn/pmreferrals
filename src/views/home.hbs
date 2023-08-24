@@ -1,0 +1,86 @@
+<div class = "container large-top-space">
+    <div id = "content-mobile" class = "row bottom-space">
+        <button id = "skipTo" class = "gold">Skip to codes</button>
+    </div>
+    <div class = "row">
+        <div class = "two-thirds column bottom-space">
+            <div class = "row bottom-space">
+                <span class = "large title">Looking for a <span class = "green">cheaper</span> phone plan?</span><br>
+                <span class = "title">Public Mobile has what you need.</span>
+            </div>
+            <div class = "row">
+                <p>Switch to Public Mobile for <b class = "green">$10</b> off your first month. It's simple:</p>
+                <ol>
+                    <li><a target = "_blank" href = "https://store.publicmobile.ca/">Order a Public Mobile SIM card.</a></li>
+                    <li>Grab a <b>referral code</b> by clicking one down below.</li>
+                    <li>Enter the code while <a target = "_blank" href = "https://activate.publicmobile.ca">activating your SIM card.</a></li>
+                    <li>Enjoy your $10 bonus and save money on a much better phone plan.</li>
+                </ol>
+                <b class = "red">Stick it to the big telecom companies</b> and stop wasting your hard earned cash: switch to Public Mobile today!
+            </div>
+        </div>
+        <div class = "one-third column">
+            <img src = "/images/money.png"></img>
+        </div>
+    </div>
+    <div class = "row">
+        <div class = "one-half column">
+            <div class = "row bottom-space">
+                <span class = "large title">Why Public Mobile?</span>
+            </div>
+            <div class = "row">
+                <ul>
+                    <li class = "li-center">Unlimited Canadian talk and text</li>
+                    <li class = "li-center">No overage charges</li class = "li-center">
+                    <li class = "li-center">Cheap plans</li class = "li-center">
+                    <li class = "li-center">Lower your monthly bill by referring others</li class = "li-center">
+                    <li class = "li-center"><b>Keep your current number!</b></li class = "li-center">
+                </ul>
+            </div>
+        </div>
+        <div class = "one-half column">
+            <div class = "row bottom-space">
+                <span id = "codesDiv" class = "large title">This Week's Codes</span>
+                <img id = "tooltip" title = "Referral codes are ranked by the number of points they accumulate. The points reset each week." class = "clickable" src = "/images/question.png"></img>
+            </div>
+            <div class = "row bottom-space">
+                {{#if empty}}
+                    <span>Looks like we're out of codes! Come back later. <img style = "position: relative; top: 4px;" src = "/images/downvote.png"></img></span>
+                {{else}}
+                    {{#each accounts as |account|}}
+                        <div class = "row">
+                            <div id="{{account.url}}" class = "card noselect clickable bottom-space">
+                                <img class = "carrier-icon right-space" src = "/images/logos/pm.png"></img>
+                                <span class = "large code">{{account.code}}<span class = "censored">###</span></span>
+                                <img class = "left-space" src = "/images/boost.png"></img>
+                                <span class = "" style = "position: relative; top: -6px; left: 3px;">{{account.boostPoints}}</span>
+                            </div>
+                        </div>
+                    {{/each}}
+                {{/if}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class = "container large-top-space bottom-space">
+    <i>PMReferrals.ca is a third-party tool and is not affiliated with Public Mobile.</i>
+</div>
+
+<script>
+    $("#tooltip").click((event) => {
+        alert("Referral codes are ranked by the number of points they accumulate. The points reset each week.");
+    });
+    $("#skipTo").click((event) => {
+        window.scrollTo(0, document.getElementById("codesDiv").getBoundingClientRect().top);
+    })
+</script>
+
+<script>
+    var cards = document.querySelectorAll('.card');
+    cards.forEach(function(card) {
+        card.addEventListener('click', function(event) {
+            window.location.replace("/referral/"+card.id);
+        }, true);
+    });
+</script>
