@@ -8,6 +8,7 @@ import hbs from "hbs";
 const app = express();
 
 import indexRouter from "./routes/IndexRoutes";
+import authRouter from "./routes/AuthRoutes";
 
 async function start() {
 
@@ -23,6 +24,7 @@ async function start() {
 
     // ESTABLISH ROUTES
     app.use("/", indexRouter);
+    app.use("/api/auth", authRouter);
 
     // HTTP SERVER
     const httpServer = http.createServer(app);
@@ -41,6 +43,8 @@ async function start() {
         const httpsServer = https.createServer(credentials, app);
         httpsServer.listen(parseInt(process.env.WEBSITE_HTTPS_PORT!));
     }
+
+    await connectToDatabase();
 
 }
 
@@ -67,7 +71,7 @@ async function connectToDatabase() {
 async function shutdown() {
     console.log("Shutting down gracefully...");
     try {
-        //await db.disconnect();
+        await mongoose.disconnect();
     } catch (error) {
         console.error("Error shutting down gracefully!", error);
     } finally {

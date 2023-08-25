@@ -15,19 +15,19 @@
 		<script src = "/scripts/jquery.js"></script>
 	</head>
 
-	<body class = "bg-color">
+	<body>
 		<div class = "container">
 			<div class = "row top-space">
 				<div class = "two-thirds column">
-					<a title = "Go to home page" href = "/"><img src = "/images/favicon.png"></img></a>
+					<a title = "Go to home page" href = "/"><img width = "30px" src = "/images/logo.png"></img></a>
 					<span style = "position: relative; bottom: 10px; text-decoration: none;">
 						{{#if loggedIn}}
-							<a href = "/account" class = "left-space pmblue title">My Account</a>
+							<a href = "/account" class = "left-space title">My Account</a>
 						{{else}}
-							<a href = "/login" class = "left-space pmblue title">Login</a>
-							<a href = "/register" class = "left-space pmblue title">Add your code</a>
+							<a href = "/login" class = "left-space title">Login</a>
+							<a href = "/register" class = "left-space title">Add your code</a>
 						{{/if}}
-						<a href = "/stats" class = "left-space pmblue title">Statistics</a>
+						<a href = "/stats" class = "left-space title">Statistics</a>
 						{{#if loggedIn}}<a href = "/logout" class = "left-space pmblue title">Logout</a>{{/if}}
 					</span>
 				</div>

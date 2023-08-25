@@ -7,7 +7,7 @@ export interface APIResponse {
 
 export interface APIError {
     success: false,
-    error: ErrorCode
+    reason: string
 }
 
 export interface ExceptionResponse {

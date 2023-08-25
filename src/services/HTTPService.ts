@@ -1,10 +1,10 @@
 import { ErrorCode } from "../types/ErrorCode";
 import { APIError, APIResponse, ExceptionResponse } from "../types/APITypes";
 
-export function error(error: ErrorCode) {
+export function error(reason: string) {
     return {
         success: false,
-        error
+        reason
     } as APIError;
 }
 

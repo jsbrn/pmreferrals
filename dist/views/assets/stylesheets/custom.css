@@ -1,9 +1,7 @@
 body {
 	font-family: 'Open Sans', sans-serif;
-}
-
-.bg-color {
-	background: #F4E8D9;
+	background-color: #394056;
+	color: #f4f2dc;
 }
 
 .top-space {
@@ -58,6 +56,7 @@ body {
 
 .title {
 	font-family: "Anton", sans-serif;
+	color: #f39d80;
 }
 
 .code {
@@ -73,8 +72,25 @@ body {
 	color: #034045;
 }
 
+.pmnavy {
+	color: #394056;
+}
+
+.pmwhite {
+	color: #f9f2dd;
+}
+
 ul {
 	list-style-image: url('/images/verified.png');
+}
+
+a {
+	color: #f9f2dd;
+}
+
+a:hover {
+	color: #f9f2dd;
+	text-decoration: underline;
 }
 
 .censored {
@@ -126,25 +142,11 @@ input[type="text"], input[type="password"], select {
 	color: white;
 }
 
-.navlink {
-	color: yellow;
-	font-style: capitalize;
-	font-weight: bold;
-	text-decoration: none;
-	text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
-	margin-right: 10px;
-	font-family: Arial, Helvetica, sans-serif;
-}
-
 .carrier-icon {
 	border-radius: 16px;
 	border: 2px solid gray;
 	position: relative;
 	top:2px;
-}
-
-.navlink:hover {
-	color: white;
 }
 
 button, .button {
@@ -196,11 +198,11 @@ button:hover, .button:hover {
 }
 
 .green {
-	color: green;
+	color: rgb(0, 192, 0);
 }
 
 .red {
-	color: red;
+	color: rgb(255, 62, 62);
 }
 
 .large {
